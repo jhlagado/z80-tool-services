@@ -132,6 +132,7 @@ export interface GenerationLifecycleConformanceResult {
 
 export interface OneByteStatusPolicy {
   readonly success: number;
+  readonly unavailable: number;
   readonly invalid: number;
   readonly exception: number;
 }
@@ -141,9 +142,54 @@ export interface OneByteStatusResult {
   readonly cause?: unknown;
 }
 
+export interface OneByteGatewayResult {
+  readonly status: number;
+  readonly value?: number;
+}
+
+export interface OneByteGateway {
+  dispatch(
+    operation: string,
+    request?: Readonly<Record<string, unknown>>,
+  ): OneByteGatewayResult | undefined;
+}
+
+export interface OneByteGatewayOperations {
+  readonly sourceRead: string;
+  readonly consoleRead: string;
+  readonly consoleWrite: string;
+  readonly exitFailure: string;
+  readonly begin: string;
+  readonly image: string;
+  readonly commit: string;
+  readonly abort: string;
+  readonly unknown: string;
+}
+
+export interface OneByteGatewayConformanceFixtures {
+  readonly sourceBytes: Uint8Array;
+  readonly sourceReadMalformedValue: unknown;
+  readonly consoleReadMalformedValue: unknown;
+  readonly sinkMalformedStatus: unknown;
+  readonly thrownHostOperation: () => unknown;
+}
+
+export interface OneByteGatewayConformanceFactory {
+  create(fixtures: OneByteGatewayConformanceFixtures): {
+    readonly gateway: OneByteGateway;
+    readonly effects: readonly string[];
+  };
+}
+
+export interface OneByteGatewayConformanceOptions {
+  readonly operations: OneByteGatewayOperations;
+  readonly policy?: OneByteStatusPolicy;
+}
+
 export const DEFAULT_ONE_BYTE_STATUS_POLICY: OneByteStatusPolicy =
   Object.freeze({
     success: 0x00,
+    unavailable: 0x02,
     invalid: 0xfe,
     exception: 0xef,
   });
@@ -173,6 +219,138 @@ export const invokeOneByteStatus = (
   } catch (cause) {
     return { status: policy.exception, cause };
   }
+};
+
+export const runOneByteGatewayConformance = (
+  factory: OneByteGatewayConformanceFactory,
+  options: OneByteGatewayConformanceOptions,
+): GenerationLifecycleConformanceResult => {
+  const policy = options.policy ?? DEFAULT_ONE_BYTE_STATUS_POLICY;
+  const { operations } = options;
+  let assertions = 0;
+  const fail = (vector: string, message: string): never => {
+    throw new Error(`one-byte gateway conformance ${vector}: ${message}`);
+  };
+  const expectResult = (
+    vector: string,
+    actual: OneByteGatewayResult | undefined,
+    expected: OneByteGatewayResult,
+  ): void => {
+    assertions += 1;
+    if (actual?.status !== expected.status || actual.value !== expected.value) {
+      fail(
+        vector,
+        `result ${JSON.stringify(actual)} does not equal ${JSON.stringify(
+          expected,
+        )}`,
+      );
+    }
+  };
+  const expectEffects = (
+    vector: string,
+    actual: readonly string[],
+    expected: readonly string[],
+  ): void => {
+    assertions += 1;
+    if (
+      actual.length !== expected.length ||
+      expected.some((effect, index) => actual[index] !== effect)
+    ) {
+      fail(vector, `effects [${actual}] do not equal [${expected}]`);
+    }
+  };
+
+  {
+    const vector = 'source-and-output-success';
+    const { gateway, effects } = factory.create({
+      sourceBytes: Uint8Array.from([0x00, 0x7f, 0xff]),
+      sourceReadMalformedValue: 0,
+      consoleReadMalformedValue: 0,
+      sinkMalformedStatus: 0,
+      thrownHostOperation: () => policy.success,
+    });
+    expectResult(
+      vector,
+      gateway.dispatch(operations.sourceRead, { offset: 1 }),
+      {
+        status: policy.success,
+        value: 0x7f,
+      },
+    );
+    expectResult(vector, gateway.dispatch(operations.begin), {
+      status: policy.success,
+    });
+    expectResult(
+      vector,
+      gateway.dispatch(operations.image, {
+        bank: 0,
+        address: 0x4000,
+        bytes: Uint8Array.from([1, 2]),
+      }),
+      { status: policy.success },
+    );
+    expectResult(vector, gateway.dispatch(operations.commit), {
+      status: policy.success,
+    });
+    expectEffects(vector, effects, ['begin', 'image:1,2', 'commit']);
+  }
+
+  {
+    const vector = 'unavailable-and-malformed';
+    const { gateway, effects } = factory.create({
+      sourceBytes: Uint8Array.from([0]),
+      sourceReadMalformedValue: 0x100,
+      consoleReadMalformedValue: -1,
+      sinkMalformedStatus: 0x100,
+      thrownHostOperation: () => policy.success,
+    });
+    expectResult(vector, gateway.dispatch(operations.unknown), {
+      status: policy.unavailable,
+    });
+    expectResult(vector, gateway.dispatch(operations.sourceRead), {
+      status: policy.invalid,
+    });
+    expectResult(vector, gateway.dispatch(operations.consoleRead), {
+      status: policy.invalid,
+    });
+    expectResult(
+      vector,
+      gateway.dispatch(operations.consoleWrite, { value: 0x100 }),
+      { status: policy.invalid },
+    );
+    expectResult(
+      vector,
+      gateway.dispatch(operations.exitFailure, { status: 0 }),
+      { status: policy.invalid },
+    );
+    expectResult(vector, gateway.dispatch(operations.begin), {
+      status: policy.invalid,
+    });
+    expectEffects(vector, effects, ['begin']);
+  }
+
+  {
+    const vector = 'thrown-host-operation';
+    const cause = new Error('injected host exception');
+    const { gateway } = factory.create({
+      sourceBytes: Uint8Array.from([0]),
+      sourceReadMalformedValue: 0,
+      consoleReadMalformedValue: 0,
+      sinkMalformedStatus: 0,
+      thrownHostOperation: () => {
+        throw cause;
+      },
+    });
+    const result = invokeOneByteStatus(
+      () => gateway.dispatch(operations.abort)?.status,
+      policy,
+    );
+    expectResult(vector, result, { status: policy.exception });
+    assertions += 1;
+    if (result.cause !== cause) fail(vector, 'cause was not preserved');
+  }
+
+  return { vectors: 3, assertions };
 };
 
 const lifecycleFail = (vector: string, message: string): never => {

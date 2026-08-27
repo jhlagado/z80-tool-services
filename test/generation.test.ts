@@ -9,6 +9,7 @@ import {
   normalizeOneByteStatus,
   oneByteValue,
   runGenerationLifecycleConformance,
+  runOneByteGatewayConformance,
 } from '../src/index.js';
 
 describe('generation storage primitives', () => {
@@ -115,6 +116,7 @@ describe('generation storage primitives', () => {
     expect(
       normalizeOneByteStatus(undefined, {
         success: 1,
+        unavailable: 4,
         invalid: 2,
         exception: 3,
       }),
@@ -140,8 +142,80 @@ describe('generation storage primitives', () => {
         () => {
           throw cause;
         },
-        { success: 1, invalid: 2, exception: 3 },
+        { success: 1, unavailable: 4, invalid: 2, exception: 3 },
       ),
     ).toEqual({ status: 3, cause });
+  });
+
+  it('runs reusable one-byte gateway conformance vectors', () => {
+    const result = runOneByteGatewayConformance(
+      {
+        create: (fixtures) => {
+          const effects: string[] = [];
+          return {
+            effects,
+            gateway: {
+              dispatch(operation, request = {}) {
+                switch (operation) {
+                  case 'sourceRead': {
+                    const offset = request.offset;
+                    const value =
+                      typeof offset === 'number'
+                        ? fixtures.sourceBytes[offset]
+                        : fixtures.sourceReadMalformedValue;
+                    const byteValue = oneByteValue(value);
+                    return byteValue === undefined
+                      ? { status: 0xfe }
+                      : { status: 0, value: byteValue };
+                  }
+                  case 'consoleRead':
+                    return typeof fixtures.consoleReadMalformedValue ===
+                      'number' &&
+                      fixtures.consoleReadMalformedValue >= 0 &&
+                      fixtures.consoleReadMalformedValue <= 0xff
+                      ? { status: 0, value: fixtures.consoleReadMalformedValue }
+                      : { status: 0xfe };
+                  case 'consoleWrite':
+                  case 'exitFailure':
+                    return { status: 0xfe };
+                  case 'begin':
+                    effects.push('begin');
+                    return typeof fixtures.sinkMalformedStatus === 'number' &&
+                      fixtures.sinkMalformedStatus > 0xff
+                      ? { status: 0xfe }
+                      : { status: 0 };
+                  case 'image':
+                    effects.push(`image:${[...(request.bytes as Uint8Array)]}`);
+                    return { status: 0 };
+                  case 'commit':
+                    effects.push('commit');
+                    return { status: 0 };
+                  case 'abort':
+                    fixtures.thrownHostOperation();
+                    return { status: 0 };
+                  default:
+                    return { status: 2 };
+                }
+              },
+            },
+          };
+        },
+      },
+      {
+        operations: {
+          sourceRead: 'sourceRead',
+          consoleRead: 'consoleRead',
+          consoleWrite: 'consoleWrite',
+          exitFailure: 'exitFailure',
+          begin: 'begin',
+          image: 'image',
+          commit: 'commit',
+          abort: 'abort',
+          unknown: 'unknown',
+        },
+      },
+    );
+
+    expect(result).toEqual({ vectors: 3, assertions: 14 });
   });
 });
