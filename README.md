@@ -34,6 +34,8 @@ The package exports:
 - one-byte service status normalization and thrown-operation capture;
 - byte console dispatch helpers for input, output, terminal success, and
   terminal failure;
+- runtime byte-stream services for generated programs with standard input,
+  standard output, storage input, storage output, seek, rewind, and reset;
 - reusable provider and gateway conformance vectors; and
 - `native/z80-tool-services-v1.asmi`, generated from the TypeScript authority;
 - the `@jhlagado/z80-tool-services/source-preparation` host API.
