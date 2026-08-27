@@ -16,6 +16,8 @@ language-specific object sinks: `MemoryGenerationSpool` for append-only byte
 chunks, `AtomicGenerationStore` for replacing a committed generation only after
 the serialized bytes validate, and `GenerationLifecycle` plus conformance
 vectors for the common `begin`/`image`/`patch`/`commit`/`abort` sequencing.
+It also provides one-byte status helpers for Z80 service gateways that return
+success or failure in a register.
 
 The package exports:
 
@@ -25,6 +27,7 @@ The package exports:
 - a byte-transparent in-memory reference provider;
 - append-only generation spools, lifecycle checks, and atomic
   committed-generation storage;
+- one-byte service status normalization and thrown-operation capture;
 - reusable provider conformance vectors; and
 - `native/z80-tool-services-v1.asmi`, generated from the TypeScript authority;
 - the `@jhlagado/z80-tool-services/source-preparation` host API.

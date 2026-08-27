@@ -130,6 +130,51 @@ export interface GenerationLifecycleConformanceResult {
   readonly assertions: number;
 }
 
+export interface OneByteStatusPolicy {
+  readonly success: number;
+  readonly invalid: number;
+  readonly exception: number;
+}
+
+export interface OneByteStatusResult {
+  readonly status: number;
+  readonly cause?: unknown;
+}
+
+export const DEFAULT_ONE_BYTE_STATUS_POLICY: OneByteStatusPolicy =
+  Object.freeze({
+    success: 0x00,
+    invalid: 0xfe,
+    exception: 0xef,
+  });
+
+export const isOneByteUnsigned = (value: unknown): value is number =>
+  Number.isInteger(value) &&
+  (value as number) >= 0 &&
+  (value as number) <= 0xff;
+
+export const oneByteValue = (value: unknown): number | undefined =>
+  isOneByteUnsigned(value) ? value : undefined;
+
+export const normalizeOneByteStatus = (
+  value: unknown,
+  policy: OneByteStatusPolicy = DEFAULT_ONE_BYTE_STATUS_POLICY,
+): number => {
+  const result = value === undefined ? policy.success : value;
+  return isOneByteUnsigned(result) ? result : policy.invalid;
+};
+
+export const invokeOneByteStatus = (
+  action: () => unknown,
+  policy: OneByteStatusPolicy = DEFAULT_ONE_BYTE_STATUS_POLICY,
+): OneByteStatusResult => {
+  try {
+    return { status: normalizeOneByteStatus(action(), policy) };
+  } catch (cause) {
+    return { status: policy.exception, cause };
+  }
+};
+
 const lifecycleFail = (vector: string, message: string): never => {
   throw new Error(`generation lifecycle conformance ${vector}: ${message}`);
 };

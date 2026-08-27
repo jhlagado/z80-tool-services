@@ -5,6 +5,9 @@ import {
   GenerationLifecycle,
   GenerationLifecycleError,
   MemoryGenerationSpool,
+  invokeOneByteStatus,
+  normalizeOneByteStatus,
+  oneByteValue,
   runGenerationLifecycleConformance,
 } from '../src/index.js';
 
@@ -97,5 +100,48 @@ describe('generation storage primitives', () => {
     });
 
     expect(result).toEqual({ vectors: 4, assertions: 16 });
+  });
+
+  it('normalizes one-byte values and statuses', () => {
+    expect(oneByteValue(0)).toBe(0);
+    expect(oneByteValue(0xff)).toBe(0xff);
+    expect(oneByteValue(-1)).toBeUndefined();
+    expect(oneByteValue(0x100)).toBeUndefined();
+    expect(oneByteValue(1.5)).toBeUndefined();
+
+    expect(normalizeOneByteStatus(undefined)).toBe(0);
+    expect(normalizeOneByteStatus(0x7f)).toBe(0x7f);
+    expect(normalizeOneByteStatus(0x100)).toBe(0xfe);
+    expect(
+      normalizeOneByteStatus(undefined, {
+        success: 1,
+        invalid: 2,
+        exception: 3,
+      }),
+    ).toBe(1);
+  });
+
+  it('converts thrown host operations to one-byte status results', () => {
+    const cause = new Error('host failed');
+
+    expect(invokeOneByteStatus(() => undefined)).toEqual({ status: 0 });
+    expect(invokeOneByteStatus(() => 0x55)).toEqual({ status: 0x55 });
+    expect(invokeOneByteStatus(() => 0x100)).toEqual({ status: 0xfe });
+    expect(
+      invokeOneByteStatus(() => {
+        throw cause;
+      }),
+    ).toEqual({
+      status: 0xef,
+      cause,
+    });
+    expect(
+      invokeOneByteStatus(
+        () => {
+          throw cause;
+        },
+        { success: 1, invalid: 2, exception: 3 },
+      ),
+    ).toEqual({ status: 3, cause });
   });
 });
