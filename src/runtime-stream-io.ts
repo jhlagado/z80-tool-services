@@ -25,6 +25,9 @@ export const RUNTIME_STREAM_IO_OPERATION = Object.freeze({
   seekStorageOutput: 0x05,
 });
 
+export type RuntimeStreamIoOperation =
+  (typeof RUNTIME_STREAM_IO_OPERATION)[keyof typeof RUNTIME_STREAM_IO_OPERATION];
+
 export interface RuntimeStreamIoHandlers {
   read(port: number): number;
   write(port: number, value: number): void;
@@ -37,6 +40,104 @@ export interface RuntimeStreamIoGatewayOptions {
 }
 
 const lowPort = (port: number): number => port & 0xff;
+
+const statusReturnBytes = (ports: typeof RUNTIME_STREAM_IO_PORT): number[] => [
+  0xdb,
+  ports.status,
+  0xb7,
+  0xc8,
+  0x37,
+  0xc9,
+];
+
+const readStubBytes = (
+  operation: RuntimeStreamIoOperation,
+  ports: typeof RUNTIME_STREAM_IO_PORT,
+): Uint8Array =>
+  Uint8Array.of(
+    0x3e,
+    operation,
+    0xd3,
+    ports.operation,
+    0xdb,
+    ports.status,
+    0xb7,
+    0x28,
+    0x02,
+    0x37,
+    0xc9,
+    0xdb,
+    ports.result,
+    0xb7,
+    0xc9,
+  );
+
+const writeByteStubBytes = (
+  operation: RuntimeStreamIoOperation,
+  ports: typeof RUNTIME_STREAM_IO_PORT,
+): Uint8Array =>
+  Uint8Array.of(
+    0x4f,
+    0x3e,
+    operation,
+    0xd3,
+    ports.operation,
+    0x79,
+    0xd3,
+    ports.value,
+    ...statusReturnBytes(ports),
+  );
+
+const simpleStatusStubBytes = (
+  operation: RuntimeStreamIoOperation,
+  ports: typeof RUNTIME_STREAM_IO_PORT,
+): Uint8Array =>
+  Uint8Array.of(
+    0x3e,
+    operation,
+    0xd3,
+    ports.operation,
+    ...statusReturnBytes(ports),
+  );
+
+const seekStubBytes = (
+  operation: RuntimeStreamIoOperation,
+  ports: typeof RUNTIME_STREAM_IO_PORT,
+): Uint8Array =>
+  Uint8Array.of(
+    0x7d,
+    0xd3,
+    ports.value,
+    0x7c,
+    0xd3,
+    ports.valueHigh,
+    0x3e,
+    operation,
+    0xd3,
+    ports.operation,
+    ...statusReturnBytes(ports),
+  );
+
+export const createRuntimeStreamIoStubBytes = (
+  operation: RuntimeStreamIoOperation,
+  options: RuntimeStreamIoGatewayOptions = {},
+): Uint8Array => {
+  const ports = { ...RUNTIME_STREAM_IO_PORT, ...options.ports };
+  switch (operation) {
+    case RUNTIME_STREAM_IO_OPERATION.readInputByte:
+    case RUNTIME_STREAM_IO_OPERATION.readStorageByte:
+      return readStubBytes(operation, ports);
+    case RUNTIME_STREAM_IO_OPERATION.writeOutputByte:
+    case RUNTIME_STREAM_IO_OPERATION.writeStorageByte:
+      return writeByteStubBytes(operation, ports);
+    case RUNTIME_STREAM_IO_OPERATION.rewindStorageInput:
+      return simpleStatusStubBytes(operation, ports);
+    case RUNTIME_STREAM_IO_OPERATION.seekStorageOutput:
+      return seekStubBytes(operation, ports);
+    default:
+      throw new RangeError('runtime stream I/O operation is invalid');
+  }
+};
 
 export const createRuntimeStreamIoHandlers = (
   streams: RuntimeByteStreams,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  createRuntimeStreamIoStubBytes,
   createRuntimeStreamIoHandlers,
   DEFAULT_RUNTIME_STREAM_STATUS_POLICY,
   dispatchRuntimeStreamService,
@@ -110,6 +111,56 @@ describe('runtime byte-stream services', () => {
       ),
     ).toBe(RUNTIME_STREAM_SERVICE.writeOutputByte);
     expect(runtimeStreamIoOperationName(0xff)).toBeUndefined();
+  });
+
+  it('generates call-compatible Z80 I/O stubs for every stream service', () => {
+    expect([
+      ...createRuntimeStreamIoStubBytes(
+        RUNTIME_STREAM_IO_OPERATION.readInputByte,
+      ),
+    ]).toEqual([
+      0x3e, 0x00, 0xd3, 0xe0, 0xdb, 0xe2, 0xb7, 0x28, 0x02, 0x37, 0xc9, 0xdb,
+      0xe3, 0xb7, 0xc9,
+    ]);
+    expect([
+      ...createRuntimeStreamIoStubBytes(
+        RUNTIME_STREAM_IO_OPERATION.writeOutputByte,
+      ),
+    ]).toEqual([
+      0x4f, 0x3e, 0x01, 0xd3, 0xe0, 0x79, 0xd3, 0xe1, 0xdb, 0xe2, 0xb7, 0xc8,
+      0x37, 0xc9,
+    ]);
+    expect([
+      ...createRuntimeStreamIoStubBytes(
+        RUNTIME_STREAM_IO_OPERATION.readStorageByte,
+      ),
+    ]).toEqual([
+      0x3e, 0x02, 0xd3, 0xe0, 0xdb, 0xe2, 0xb7, 0x28, 0x02, 0x37, 0xc9, 0xdb,
+      0xe3, 0xb7, 0xc9,
+    ]);
+    expect([
+      ...createRuntimeStreamIoStubBytes(
+        RUNTIME_STREAM_IO_OPERATION.rewindStorageInput,
+      ),
+    ]).toEqual([
+      0x3e, 0x03, 0xd3, 0xe0, 0xdb, 0xe2, 0xb7, 0xc8, 0x37, 0xc9,
+    ]);
+    expect([
+      ...createRuntimeStreamIoStubBytes(
+        RUNTIME_STREAM_IO_OPERATION.writeStorageByte,
+      ),
+    ]).toEqual([
+      0x4f, 0x3e, 0x04, 0xd3, 0xe0, 0x79, 0xd3, 0xe1, 0xdb, 0xe2, 0xb7, 0xc8,
+      0x37, 0xc9,
+    ]);
+    expect([
+      ...createRuntimeStreamIoStubBytes(
+        RUNTIME_STREAM_IO_OPERATION.seekStorageOutput,
+      ),
+    ]).toEqual([
+      0x7d, 0xd3, 0xe1, 0x7c, 0xd3, 0xe4, 0x3e, 0x05, 0xd3, 0xe0, 0xdb, 0xe2,
+      0xb7, 0xc8, 0x37, 0xc9,
+    ]);
   });
 
   it('rejects invalid initial byte arrays', () => {
