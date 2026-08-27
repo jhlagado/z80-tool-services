@@ -1,7 +1,7 @@
 {
   "name": "@jhlagado/z80-tool-services",
   "version": "0.1.0",
-  "description": "Shared named-object services for Z80-hosted development tools",
+  "description": "Shared host and named-object services for Z80 development tools",
   "license": "GPL-3.0-or-later",
   "type": "module",
   "engines": {
@@ -14,12 +14,17 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./source-preparation": {
+      "types": "./source-preparation/index.d.mts",
+      "import": "./source-preparation/index.mjs"
+    },
     "./native/z80-tool-services-v1.asmi": "./native/z80-tool-services-v1.asmi",
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
     "native",
+    "source-preparation",
     "README.md",
     "LICENSE"
   ],
