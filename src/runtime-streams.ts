@@ -16,6 +16,15 @@ export interface RuntimeStreamStatusPolicy {
   readonly invalid: number;
 }
 
+export const RUNTIME_STREAM_SERVICE = Object.freeze({
+  readInputByte: 'readInputByte',
+  writeOutputByte: 'writeOutputByte',
+  readStorageByte: 'readStorageByte',
+  rewindStorageInput: 'rewindStorageInput',
+  writeStorageByte: 'writeStorageByte',
+  seekStorageOutput: 'seekStorageOutput',
+});
+
 export const DEFAULT_RUNTIME_STREAM_STATUS_POLICY: RuntimeStreamStatusPolicy =
   Object.freeze({
     success: 0x00,
@@ -219,40 +228,22 @@ export const dispatchRuntimeStreamService = (
   request?: Readonly<Record<string, unknown>>,
 ): OneByteGatewayResult => {
   switch (operation) {
-    case 'readInputByte':
+    case RUNTIME_STREAM_SERVICE.readInputByte:
       return streams.readInputByte();
-    case 'writeOutputByte':
+    case RUNTIME_STREAM_SERVICE.writeOutputByte:
       return streams.writeOutputByte(request);
-    case 'readStorageByte':
+    case RUNTIME_STREAM_SERVICE.readStorageByte:
       return streams.readStorageByte();
-    case 'rewindStorageInput':
+    case RUNTIME_STREAM_SERVICE.rewindStorageInput:
       return streams.rewindStorageInput();
-    case 'writeStorageByte':
+    case RUNTIME_STREAM_SERVICE.writeStorageByte:
       return streams.writeStorageByte(request);
-    case 'seekStorageOutput':
+    case RUNTIME_STREAM_SERVICE.seekStorageOutput:
       return streams.seekStorageOutput(request);
     default:
       return { status: DEFAULT_RUNTIME_STREAM_STATUS_POLICY.invalid };
   }
 };
-
-export const adaptByteConsoleToRuntimeStreams = (
-  streams: RuntimeByteStreams,
-): {
-  read(): number | undefined;
-  write(value: number): number;
-} =>
-  Object.freeze({
-    read() {
-      const result = streams.readInputByte();
-      return result.status === DEFAULT_RUNTIME_STREAM_STATUS_POLICY.success
-        ? result.value
-        : undefined;
-    },
-    write(value: number) {
-      return streams.writeOutputByte({ value }).status;
-    },
-  });
 
 export const runRuntimeByteStreamsConformance = (
   factory: RuntimeByteStreamsConformanceFactory,

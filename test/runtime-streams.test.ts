@@ -4,6 +4,7 @@ import {
   DEFAULT_RUNTIME_STREAM_STATUS_POLICY,
   dispatchRuntimeStreamService,
   MemoryRuntimeByteStreams,
+  RUNTIME_STREAM_SERVICE,
   runRuntimeByteStreamsConformance,
 } from '../src/index.js';
 
@@ -33,14 +34,28 @@ describe('runtime byte-stream services', () => {
       storageInput: [0x51],
     });
 
-    expect(dispatchRuntimeStreamService(streams, 'readInputByte')).toEqual({
+    expect(
+      dispatchRuntimeStreamService(
+        streams,
+        RUNTIME_STREAM_SERVICE.readInputByte,
+      ),
+    ).toEqual({
       status: 0,
       value: 0x41,
     });
     expect(
-      dispatchRuntimeStreamService(streams, 'writeOutputByte', { value: 0x42 }),
+      dispatchRuntimeStreamService(
+        streams,
+        RUNTIME_STREAM_SERVICE.writeOutputByte,
+        { value: 0x42 },
+      ),
     ).toEqual({ status: 0 });
-    expect(dispatchRuntimeStreamService(streams, 'readStorageByte')).toEqual({
+    expect(
+      dispatchRuntimeStreamService(
+        streams,
+        RUNTIME_STREAM_SERVICE.readStorageByte,
+      ),
+    ).toEqual({
       status: 0,
       value: 0x51,
     });
