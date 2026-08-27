@@ -70,4 +70,36 @@ describe('runtime byte-stream services', () => {
       'input contains a non-byte value',
     );
   });
+
+  it('models bounded proof outputs and selected output-call failure', () => {
+    const streams = new MemoryRuntimeByteStreams({
+      outputCapacity: 1,
+      storageOutputCapacity: 1,
+      failOutputWriteCall: 2,
+    });
+
+    expect(streams.writeOutputByte({ value: 0x41 })).toEqual({ status: 0 });
+    expect(streams.writeOutputByte({ value: 0x42 })).toEqual({ status: 3 });
+    expect(streams.outputWriteCalls).toBe(2);
+    expect([...streams.output]).toEqual([0x41]);
+    expect(streams.writeStorageByte({ value: 0x51 })).toEqual({ status: 0 });
+    expect(streams.writeStorageByte({ value: 0x52 })).toEqual({ status: 4 });
+    expect([...streams.storageOutput]).toEqual([0x51]);
+  });
+
+  it('rejects invalid proof-capacity settings', () => {
+    expect(() => new MemoryRuntimeByteStreams({ outputCapacity: -1 })).toThrow(
+      'output capacity is invalid',
+    );
+    expect(
+      () =>
+        new MemoryRuntimeByteStreams({
+          storageOutput: [0x41, 0x42],
+          storageOutputCapacity: 1,
+        }),
+    ).toThrow('storage output exceeds storage output capacity');
+    expect(
+      () => new MemoryRuntimeByteStreams({ failOutputWriteCall: 0 }),
+    ).toThrow('fail output write call is invalid');
+  });
 });

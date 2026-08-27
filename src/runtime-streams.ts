@@ -39,6 +39,7 @@ export interface RuntimeByteStreams {
   readonly output: Uint8Array;
   readonly storageOutput: Uint8Array;
   readonly inputOffset: number;
+  readonly outputWriteCalls: number;
   readonly storageInputOffset: number;
   readonly storageOutputOffset: number;
   readInputByte(): OneByteGatewayResult;
@@ -60,6 +61,9 @@ export interface MemoryRuntimeByteStreamsState {
   readonly input?: Uint8Array | readonly number[];
   readonly storageInput?: Uint8Array | readonly number[];
   readonly storageOutput?: Uint8Array | readonly number[];
+  readonly outputCapacity?: number;
+  readonly storageOutputCapacity?: number;
+  readonly failOutputWriteCall?: number;
   readonly failInputReads?: boolean;
   readonly failOutputWrites?: boolean;
   readonly failStorageReads?: boolean;
@@ -96,11 +100,34 @@ const wordValue = (value: unknown): number | undefined =>
     ? (value as number)
     : undefined;
 
+const capacityValue = (
+  name: string,
+  value: number | undefined,
+  fallback: number,
+): number => {
+  if (value === undefined) return fallback;
+  if (value === Number.POSITIVE_INFINITY) return value;
+  if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
+    throw new TypeError(`${name} is invalid`);
+  }
+  return value;
+};
+
+const positiveIntegerValue = (name: string, value: number): number => {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new TypeError(`${name} is invalid`);
+  }
+  return value;
+};
+
 export class MemoryRuntimeByteStreams implements RuntimeByteStreams {
   readonly #initialInput: Uint8Array;
   readonly #initialStorageInput: Uint8Array;
   readonly #initialStorageOutput: Uint8Array;
   readonly #policy: RuntimeStreamStatusPolicy;
+  readonly #outputCapacity: number;
+  readonly #storageOutputCapacity: number;
+  readonly #failOutputWriteCall: number | undefined;
   readonly #failInputReads: boolean;
   readonly #failOutputWrites: boolean;
   readonly #failStorageReads: boolean;
@@ -110,6 +137,7 @@ export class MemoryRuntimeByteStreams implements RuntimeByteStreams {
   readonly #output: number[] = [];
   readonly #storageOutput: number[] = [];
   #inputOffset = 0;
+  #outputWriteCalls = 0;
   #storageInputOffset = 0;
   #storageOutputOffset = 0;
 
@@ -124,6 +152,26 @@ export class MemoryRuntimeByteStreams implements RuntimeByteStreams {
       state.storageOutput,
     );
     this.#policy = state.policy ?? DEFAULT_RUNTIME_STREAM_STATUS_POLICY;
+    this.#outputCapacity = capacityValue(
+      'output capacity',
+      state.outputCapacity,
+      Number.POSITIVE_INFINITY,
+    );
+    this.#storageOutputCapacity = capacityValue(
+      'storage output capacity',
+      state.storageOutputCapacity,
+      Number.POSITIVE_INFINITY,
+    );
+    if (this.#initialStorageOutput.length > this.#storageOutputCapacity) {
+      throw new TypeError('storage output exceeds storage output capacity');
+    }
+    this.#failOutputWriteCall =
+      state.failOutputWriteCall === undefined
+        ? undefined
+        : positiveIntegerValue(
+            'fail output write call',
+            state.failOutputWriteCall,
+          );
     this.#failInputReads = state.failInputReads === true;
     this.#failOutputWrites = state.failOutputWrites === true;
     this.#failStorageReads = state.failStorageReads === true;
@@ -145,6 +193,10 @@ export class MemoryRuntimeByteStreams implements RuntimeByteStreams {
     return this.#inputOffset;
   }
 
+  get outputWriteCalls(): number {
+    return this.#outputWriteCalls;
+  }
+
   get storageInputOffset(): number {
     return this.#storageInputOffset;
   }
@@ -155,6 +207,7 @@ export class MemoryRuntimeByteStreams implements RuntimeByteStreams {
 
   reset(): void {
     this.#inputOffset = 0;
+    this.#outputWriteCalls = 0;
     this.#storageInputOffset = 0;
     this.#output.length = 0;
     this.#storageOutput.length = 0;
@@ -177,7 +230,14 @@ export class MemoryRuntimeByteStreams implements RuntimeByteStreams {
   ): OneByteGatewayResult {
     const value = oneByteValue(request?.value);
     if (value === undefined) return { status: this.#policy.invalid };
-    if (this.#failOutputWrites) return { status: this.#policy.outputFailure };
+    this.#outputWriteCalls += 1;
+    if (
+      this.#failOutputWrites ||
+      this.#outputWriteCalls === this.#failOutputWriteCall ||
+      this.#output.length >= this.#outputCapacity
+    ) {
+      return { status: this.#policy.outputFailure };
+    }
     this.#output.push(value);
     return { status: this.#policy.success };
   }
@@ -204,6 +264,12 @@ export class MemoryRuntimeByteStreams implements RuntimeByteStreams {
     const value = oneByteValue(request?.value);
     if (value === undefined) return { status: this.#policy.invalid };
     if (this.#failStorageWrites) return { status: this.#policy.storageFailure };
+    if (
+      this.#storageOutputOffset === this.#storageOutput.length &&
+      this.#storageOutput.length >= this.#storageOutputCapacity
+    ) {
+      return { status: this.#policy.storageFailure };
+    }
     this.#storageOutput[this.#storageOutputOffset] = value;
     this.#storageOutputOffset += 1;
     return { status: this.#policy.success };
