@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   AtomicGenerationStore,
+  GenerationLifecycle,
+  GenerationLifecycleError,
   MemoryGenerationSpool,
+  runGenerationLifecycleConformance,
 } from '../src/index.js';
 
 describe('generation storage primitives', () => {
@@ -46,5 +49,53 @@ describe('generation storage primitives', () => {
       'invalid generation',
     );
     expect(store.current).toEqual(Uint8Array.from([0xa5, 1]));
+  });
+
+  it('rejects invalid open and closed lifecycle transitions', () => {
+    const lifecycle = new GenerationLifecycle();
+
+    expect(lifecycle.active).toBe(false);
+    expect(() => lifecycle.requireActive()).toThrow(GenerationLifecycleError);
+
+    lifecycle.begin();
+    expect(lifecycle.active).toBe(true);
+    expect(() => lifecycle.begin()).toThrow('a generation is already active');
+
+    lifecycle.finish();
+    expect(lifecycle.active).toBe(false);
+    expect(() => lifecycle.abort()).toThrow('no generation is active');
+  });
+
+  it('runs reusable lifecycle conformance vectors', () => {
+    const result = runGenerationLifecycleConformance(() => {
+      const lifecycle = new GenerationLifecycle();
+      let imageSeen = false;
+
+      return {
+        get active() {
+          return lifecycle.active;
+        },
+        begin() {
+          imageSeen = false;
+          lifecycle.begin();
+        },
+        image() {
+          lifecycle.requireActive();
+          imageSeen = true;
+        },
+        patch() {
+          lifecycle.requireActive();
+          if (!imageSeen) throw new Error('patch requires image');
+        },
+        commit() {
+          lifecycle.finish();
+        },
+        abort() {
+          lifecycle.abort();
+        },
+      };
+    });
+
+    expect(result).toEqual({ vectors: 4, assertions: 16 });
   });
 });
