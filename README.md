@@ -18,8 +18,9 @@ part-ordinal byte reads, `MemoryGenerationSpool` for append-only byte chunks,
 serialized bytes validate, and `GenerationLifecycle` plus conformance vectors
 for the common `begin`/`image`/`patch`/`commit`/`abort` sequencing. It also
 provides one-byte status helpers for Z80 service gateways that return success
-or failure in a register, plus conformance vectors for direct-host gateways
-built on that shape.
+or failure in a register, byte console dispatch helpers for input, output, and
+terminal status, plus conformance vectors for direct-host gateways built on
+those shapes.
 
 The package exports:
 
@@ -31,6 +32,8 @@ The package exports:
 - append-only generation spools, lifecycle checks, and atomic
   committed-generation storage;
 - one-byte service status normalization and thrown-operation capture;
+- byte console dispatch helpers for input, output, terminal success, and
+  terminal failure;
 - reusable provider and gateway conformance vectors; and
 - `native/z80-tool-services-v1.asmi`, generated from the TypeScript authority;
 - the `@jhlagado/z80-tool-services/source-preparation` host API.
