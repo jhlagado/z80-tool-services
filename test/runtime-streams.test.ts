@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  createRuntimeStreamIoHandlers,
   DEFAULT_RUNTIME_STREAM_STATUS_POLICY,
   dispatchRuntimeStreamService,
   MemoryRuntimeByteStreams,
+  RUNTIME_STREAM_IO_OPERATION,
+  RUNTIME_STREAM_IO_PORT,
   RUNTIME_STREAM_SERVICE,
+  runtimeStreamIoOperationName,
   runRuntimeByteStreamsConformance,
 } from '../src/index.js';
 
@@ -63,6 +67,49 @@ describe('runtime byte-stream services', () => {
       status: 0xfe,
     });
     expect([...streams.output]).toEqual([0x42]);
+  });
+
+  it('dispatches runtime stream operations through byte-wide I/O ports', () => {
+    const streams = new MemoryRuntimeByteStreams({ input: [0x41] });
+    const io = createRuntimeStreamIoHandlers(streams);
+
+    io.write(
+      RUNTIME_STREAM_IO_PORT.operation,
+      RUNTIME_STREAM_IO_OPERATION.readInputByte,
+    );
+    expect(io.read(RUNTIME_STREAM_IO_PORT.status)).toBe(0);
+    expect(io.read(RUNTIME_STREAM_IO_PORT.result)).toBe(0x41);
+
+    io.write(
+      RUNTIME_STREAM_IO_PORT.operation,
+      RUNTIME_STREAM_IO_OPERATION.writeOutputByte,
+    );
+    io.write(RUNTIME_STREAM_IO_PORT.value, 0x42);
+    expect(io.read(RUNTIME_STREAM_IO_PORT.status)).toBe(0);
+    expect([...streams.output]).toEqual([0x42]);
+
+    io.write(
+      RUNTIME_STREAM_IO_PORT.operation,
+      RUNTIME_STREAM_IO_OPERATION.seekStorageOutput,
+    );
+    io.write(RUNTIME_STREAM_IO_PORT.value, 0x00);
+    io.write(RUNTIME_STREAM_IO_PORT.valueHigh, 0x01);
+    expect(io.read(RUNTIME_STREAM_IO_PORT.status)).toBe(4);
+
+    io.write(RUNTIME_STREAM_IO_PORT.operation, 0xff);
+    expect(io.read(RUNTIME_STREAM_IO_PORT.status)).toBe(0xfe);
+  });
+
+  it('names the byte-wide I/O operation ordinals', () => {
+    expect(
+      runtimeStreamIoOperationName(RUNTIME_STREAM_IO_OPERATION.readInputByte),
+    ).toBe(RUNTIME_STREAM_SERVICE.readInputByte);
+    expect(
+      runtimeStreamIoOperationName(
+        RUNTIME_STREAM_IO_OPERATION.writeOutputByte,
+      ),
+    ).toBe(RUNTIME_STREAM_SERVICE.writeOutputByte);
+    expect(runtimeStreamIoOperationName(0xff)).toBeUndefined();
   });
 
   it('rejects invalid initial byte arrays', () => {
