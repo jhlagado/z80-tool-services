@@ -1,5 +1,12 @@
 /** Language-neutral byte source provider primitives. */
 
+import {
+  DEFAULT_ONE_BYTE_STATUS_POLICY,
+  oneByteValue,
+  type OneByteGatewayResult,
+  type OneByteStatusPolicy,
+} from './generation.js';
+
 export interface SourceByteProvider {
   read(partOrdinal: number, offset: number): number | undefined;
 }
@@ -45,6 +52,20 @@ export interface SourceByteProviderConformanceFactory {
 export interface SourceByteProviderConformanceResult {
   readonly vectors: number;
   readonly assertions: number;
+}
+
+export interface SourceServiceGateway {
+  sourceRead(
+    request?: Readonly<Record<string, unknown>>,
+  ): OneByteGatewayResult | undefined;
+}
+
+export interface SourceServiceGatewayConformanceFactory {
+  create(provider: SourceByteProvider): SourceServiceGateway;
+}
+
+export interface SourceServiceGatewayConformanceOptions {
+  readonly policy?: OneByteStatusPolicy;
 }
 
 const fail = (vector: string, message: string): never => {
@@ -95,4 +116,113 @@ export const runSourceByteProviderConformance = (
   }
 
   return { vectors: 2, assertions };
+};
+
+export const dispatchSourceByteRead = (
+  provider: SourceByteProvider,
+  request: Readonly<Record<string, unknown>> | undefined,
+  policy: OneByteStatusPolicy = DEFAULT_ONE_BYTE_STATUS_POLICY,
+): OneByteGatewayResult => {
+  const part = request?.part;
+  const offset = request?.offset;
+  if (
+    !Number.isInteger(part) ||
+    !Number.isInteger(offset) ||
+    (part as number) < 0 ||
+    (offset as number) < 0
+  ) {
+    return { status: policy.invalid };
+  }
+  try {
+    const value = oneByteValue(provider.read(part as number, offset as number));
+    return value === undefined
+      ? { status: policy.invalid }
+      : { status: policy.success, value };
+  } catch {
+    return { status: policy.exception };
+  }
+};
+
+export const runSourceServiceGatewayConformance = (
+  factory: SourceServiceGatewayConformanceFactory,
+  options: SourceServiceGatewayConformanceOptions = {},
+): SourceByteProviderConformanceResult => {
+  const policy = options.policy ?? DEFAULT_ONE_BYTE_STATUS_POLICY;
+  let assertions = 0;
+  const expectResult = (
+    vector: string,
+    actual: OneByteGatewayResult | undefined,
+    expected: OneByteGatewayResult,
+  ): void => {
+    assertions += 1;
+    if (actual?.status !== expected.status || actual.value !== expected.value) {
+      fail(
+        vector,
+        `result ${JSON.stringify(actual)} does not equal ${JSON.stringify(
+          expected,
+        )}`,
+      );
+    }
+  };
+
+  {
+    const vector = 'source-request-shape';
+    const provider = new MemorySourceByteProvider([
+      { ordinal: 0, bytes: Uint8Array.from([0x41, 0x00]) },
+      { ordinal: 2, bytes: Uint8Array.from([0xff]) },
+    ]);
+    const gateway = factory.create(provider);
+    expectResult(vector, gateway.sourceRead({ part: 0, offset: 0 }), {
+      status: policy.success,
+      value: 0x41,
+    });
+    expectResult(vector, gateway.sourceRead({ part: 0, offset: 1 }), {
+      status: policy.success,
+      value: 0x00,
+    });
+    expectResult(vector, gateway.sourceRead({ part: 2, offset: 0 }), {
+      status: policy.success,
+      value: 0xff,
+    });
+  }
+
+  {
+    const vector = 'eof-and-malformed-source-request';
+    const provider = new MemorySourceByteProvider([
+      { ordinal: 1, bytes: Uint8Array.of(0x20) },
+    ]);
+    const gateway = factory.create(provider);
+    expectResult(vector, gateway.sourceRead({ part: 1, offset: 1 }), {
+      status: policy.invalid,
+    });
+    expectResult(vector, gateway.sourceRead({ part: 2, offset: 0 }), {
+      status: policy.invalid,
+    });
+    expectResult(vector, gateway.sourceRead({ part: -1, offset: 0 }), {
+      status: policy.invalid,
+    });
+    expectResult(vector, gateway.sourceRead({ part: 1, offset: -1 }), {
+      status: policy.invalid,
+    });
+    expectResult(vector, gateway.sourceRead({ part: '1', offset: 0 }), {
+      status: policy.invalid,
+    });
+    expectResult(vector, gateway.sourceRead(), {
+      status: policy.invalid,
+    });
+  }
+
+  {
+    const vector = 'source-provider-failure';
+    const gateway = factory.create({
+      read() {
+        throw new Error('source provider failed');
+      },
+    });
+    expectResult(vector, gateway.sourceRead({ part: 0, offset: 0 }), {
+      status: policy.exception,
+    });
+  }
+
+  return { vectors: 3, assertions };
 };

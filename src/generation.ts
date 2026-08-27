@@ -271,7 +271,7 @@ export const runOneByteGatewayConformance = (
     });
     expectResult(
       vector,
-      gateway.dispatch(operations.sourceRead, { offset: 1 }),
+      gateway.dispatch(operations.sourceRead, { part: 0, offset: 1 }),
       {
         status: policy.success,
         value: 0x7f,
