@@ -1,0 +1,59 @@
+{
+  "name": "@jhlagado/z80-tool-services",
+  "version": "0.1.0",
+  "description": "Shared named-object services for Z80-hosted development tools",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./native/z80-tool-services-v1.asmi": "./native/z80-tool-services-v1.asmi",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "native",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhlagado/debug80.git",
+    "directory": "packages/z80-tool-services"
+  },
+  "bugs": {
+    "url": "https://github.com/jhlagado/debug80/issues"
+  },
+  "scripts": {
+    "clean": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.json && node scripts/generate-native-abi.mjs",
+    "check:native": "node scripts/generate-native-abi.mjs --check",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src test --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.md\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.md\"",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0",
+    "typescript": "5.3.3",
+    "vitest": "^4.1.7"
+  }
+}
