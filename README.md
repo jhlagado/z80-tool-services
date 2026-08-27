@@ -11,14 +11,15 @@ identities, deterministic dependency ordering, cycle detection, path-keyed
 placement, bounded capacities, and provenance. Each language supplies its own
 directive profile and compiler-byte policy.
 
-The main package also exports small generation primitives used by
-language-specific object sinks: `MemoryGenerationSpool` for append-only byte
-chunks, `AtomicGenerationStore` for replacing a committed generation only after
-the serialized bytes validate, and `GenerationLifecycle` plus conformance
-vectors for the common `begin`/`image`/`patch`/`commit`/`abort` sequencing.
-It also provides one-byte status helpers for Z80 service gateways that return
-success or failure in a register, plus conformance vectors for direct-host
-gateways built on that shape.
+The main package also exports small source and generation primitives used by
+language-specific host adapters: `MemorySourceByteProvider` for explicit
+part-ordinal byte reads, `MemoryGenerationSpool` for append-only byte chunks,
+`AtomicGenerationStore` for replacing a committed generation only after the
+serialized bytes validate, and `GenerationLifecycle` plus conformance vectors
+for the common `begin`/`image`/`patch`/`commit`/`abort` sequencing. It also
+provides one-byte status helpers for Z80 service gateways that return success
+or failure in a register, plus conformance vectors for direct-host gateways
+built on that shape.
 
 The package exports:
 
@@ -26,6 +27,7 @@ The package exports:
 - TypeScript provider and result types;
 - a small synchronous client;
 - a byte-transparent in-memory reference provider;
+- explicit-ordinal source byte providers;
 - append-only generation spools, lifecycle checks, and atomic
   committed-generation storage;
 - one-byte service status normalization and thrown-operation capture;
