@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  dispatchZ80AssemblerFlavour,
   normalizeZ80AssemblerFlavour,
   selectConcreteZ80AssemblerFlavour,
   Z80_ASSEMBLER_FLAVOUR,
@@ -75,6 +76,52 @@ describe('Z80 assembler flavour selection', () => {
     );
   });
 
+  it('dispatches a source to the selected concrete assembler handler', () => {
+    const calls: string[] = [];
+    const handlers = {
+      atom: (flavour: 'atom' | 'azm') => {
+        calls.push(`atom:${flavour}`);
+        return 'assembled-by-atom';
+      },
+      azm: (flavour: 'atom' | 'azm') => {
+        calls.push(`azm:${flavour}`);
+        return 'assembled-by-azm';
+      },
+    };
+
+    expect(
+      dispatchZ80AssemblerFlavour({
+        requested: 'atom-z80',
+        sourcePath: 'src/main.asm',
+        handlers,
+      }),
+    ).toBe('assembled-by-atom');
+    expect(calls).toEqual(['atom:atom']);
+
+    expect(
+      dispatchZ80AssemblerFlavour({
+        requested: 'asm80',
+        sourcePath: 'src/main.asm',
+        handlers,
+      }),
+    ).toBe('assembled-by-azm');
+    expect(calls).toEqual(['atom:atom', 'azm:azm']);
+  });
+
+  it('keeps neutral callers from routing .asm by filename alone', () => {
+    expect(() =>
+      dispatchZ80AssemblerFlavour({
+        sourcePath: 'src/main.asm',
+        handlers: {
+          atom: () => 'atom',
+          azm: () => 'azm',
+        },
+      }),
+    ).toThrow(
+      'src/main.asm does not select an assembler from its filename; set assembler to atom or azm',
+    );
+  });
+
   it('rejects invalid values at the host boundary', () => {
     expect(() => normalizeZ80AssemblerFlavour('')).toThrow(
       'assembler flavour must be atom, azm, or auto',
@@ -97,5 +144,16 @@ describe('Z80 assembler flavour selection', () => {
         defaultFlavour: 'auto',
       }),
     ).toThrow('default assembler flavour is invalid');
+    expect(() =>
+      dispatchZ80AssemblerFlavour({
+        requested: 'atom',
+        sourcePath: 'src/main.asm',
+        handlers: {
+          // @ts-expect-error Deliberately invalid runtime input.
+          atom: undefined,
+          azm: () => 'azm',
+        },
+      }),
+    ).toThrow('assembler handler for atom is unavailable');
   });
 });

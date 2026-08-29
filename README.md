@@ -24,12 +24,17 @@ those shapes.
 
 The main package also defines the shared assembler-flavour names used by Node
 tools that accept ordinary `.asm` files. Callers choose `atom`, `azm`, or
-`auto`; filenames do not select a dialect by themselves.
+`auto`; filenames do not select a dialect by themselves. Neutral tools should
+call `dispatchZ80AssemblerFlavour` with explicit Atom and AZM handlers after
+reading project or target configuration. Command-owned tools may pass a
+concrete default, but the shared package still performs the same normalization
+and rejects unresolved `auto` before any assembler-specific code runs.
 
 The package exports:
 
 - the canonical 16-byte request layout, operation numbers, and status values;
 - shared Z80 assembler-flavour constants and normalization;
+- concrete assembler-flavour selection and dependency-free dispatcher helpers;
 - TypeScript provider and result types;
 - a small synchronous client;
 - a byte-transparent in-memory reference provider;

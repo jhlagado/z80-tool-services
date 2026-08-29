@@ -65,6 +65,15 @@ export interface SelectConcreteZ80AssemblerFlavourOptions {
   readonly sourcePath?: string;
 }
 
+export type Z80AssemblerFlavourHandlers<Result> = Readonly<
+  Record<ConcreteZ80AssemblerFlavour, (flavour: ConcreteZ80AssemblerFlavour) => Result>
+>;
+
+export interface DispatchZ80AssemblerFlavourOptions<Result>
+  extends SelectConcreteZ80AssemblerFlavourOptions {
+  readonly handlers: Z80AssemblerFlavourHandlers<Result>;
+}
+
 /**
  * Select the concrete assembler that will own one assembly source.
  *
@@ -93,4 +102,27 @@ export const selectConcreteZ80AssemblerFlavour = ({
     );
   }
   return flavour;
+};
+
+/**
+ * Dispatch a shared `.asm` source to the assembler implementation selected by
+ * caller policy. The shared package owns only the flavour decision; concrete
+ * Atom and AZM assembly remains in language-specific packages.
+ */
+export const dispatchZ80AssemblerFlavour = <Result>({
+  requested,
+  defaultFlavour,
+  sourcePath,
+  handlers,
+}: DispatchZ80AssemblerFlavourOptions<Result>): Result => {
+  const flavour = selectConcreteZ80AssemblerFlavour({
+    requested,
+    ...(defaultFlavour === undefined ? {} : { defaultFlavour }),
+    ...(sourcePath === undefined ? {} : { sourcePath }),
+  });
+  const handler = handlers[flavour];
+  if (typeof handler !== 'function') {
+    throw new TypeError(`assembler handler for ${flavour} is unavailable`);
+  }
+  return handler(flavour);
 };
