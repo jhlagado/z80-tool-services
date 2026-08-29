@@ -1,4 +1,5 @@
 export * from './abi.js';
+export * from './assembler-flavour.js';
 export * from './client.js';
 export * from './console.js';
 export * from './conformance.js';

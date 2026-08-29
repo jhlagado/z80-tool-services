@@ -22,9 +22,14 @@ or failure in a register, byte console dispatch helpers for input, output, and
 terminal status, plus conformance vectors for direct-host gateways built on
 those shapes.
 
+The main package also defines the shared assembler-flavour names used by Node
+tools that accept ordinary `.asm` files. Callers choose `atom`, `azm`, or
+`auto`; filenames do not select a dialect by themselves.
+
 The package exports:
 
 - the canonical 16-byte request layout, operation numbers, and status values;
+- shared Z80 assembler-flavour constants and normalization;
 - TypeScript provider and result types;
 - a small synchronous client;
 - a byte-transparent in-memory reference provider;
