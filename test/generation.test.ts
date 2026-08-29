@@ -5,6 +5,7 @@ import {
   GenerationLifecycle,
   GenerationLifecycleError,
   MemoryGenerationSpool,
+  appendOnlyGenerationLifecycleAdapter,
   invokeOneByteStatus,
   normalizeOneByteStatus,
   oneByteValue,
@@ -98,6 +99,62 @@ describe('generation storage primitives', () => {
           lifecycle.abort();
         },
       };
+    });
+
+    expect(result).toEqual({ vectors: 4, assertions: 16 });
+  });
+
+  it('adapts typed append-only sinks to lifecycle conformance vectors', () => {
+    const result = runGenerationLifecycleConformance(() => {
+      const lifecycle = new GenerationLifecycle();
+      let cursor = 0;
+      const events: string[] = [];
+
+      return appendOnlyGenerationLifecycleAdapter({
+        active: () => lifecycle.active,
+        begin(record: { readonly target: number }) {
+          cursor = record.target;
+          events.length = 0;
+          lifecycle.begin();
+          events.push(`begin:${record.target}`);
+        },
+        image(record: { readonly address: number; readonly bytes: Uint8Array }) {
+          lifecycle.requireActive();
+          if (record.address !== cursor) {
+            throw new Error('non-contiguous image');
+          }
+          cursor += record.bytes.length;
+          events.push(`image:${record.address}:${record.bytes.length}`);
+        },
+        patch(record: { readonly address: number; readonly bytes: Uint8Array }) {
+          lifecycle.requireActive();
+          if (record.bytes.length === 0 || record.address < 0x4000) {
+            throw new Error('invalid patch');
+          }
+          events.push(`patch:${record.address}`);
+        },
+        commit(record: { readonly finalCursor: number }) {
+          lifecycle.requireActive();
+          if (record.finalCursor !== cursor) {
+            throw new Error('wrong final cursor');
+          }
+          events.push(`commit:${record.finalCursor}`);
+          lifecycle.finish();
+        },
+        abort() {
+          events.push('abort');
+          lifecycle.abort();
+        },
+        records: () => ({
+          begin: { target: 0x4000 },
+          image: {
+            address: cursor,
+            bytes: Uint8Array.of(1, 2),
+          },
+          patch: { address: 0x4001, bytes: Uint8Array.of(9) },
+          commit: { finalCursor: cursor },
+        }),
+      });
     });
 
     expect(result).toEqual({ vectors: 4, assertions: 16 });

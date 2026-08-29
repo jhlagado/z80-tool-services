@@ -125,6 +125,68 @@ export interface GenerationLifecycleConformanceSink {
   abort(): void;
 }
 
+export interface AppendOnlyGenerationSinkAdapterOptions<
+  TBegin,
+  TImage,
+  TPatch,
+  TCommit,
+> {
+  readonly active: () => boolean;
+  readonly begin: (record: TBegin) => void;
+  readonly image: (record: TImage) => void;
+  readonly patch: (record: TPatch) => void;
+  readonly commit: (record: TCommit) => void;
+  readonly abort: () => void;
+  readonly records: () => {
+    readonly begin: TBegin;
+    readonly image: TImage;
+    readonly patch: TPatch;
+    readonly commit: TCommit;
+  };
+}
+
+/**
+ * Adapt a typed append-only generation sink to the reusable lifecycle vectors.
+ *
+ * Atom and Nucleus use different begin, image, patch, and commit records. The
+ * lifecycle contract is still common: closed sinks reject work, begin opens a
+ * tentative generation, image and patch require an open generation, and commit
+ * or abort closes it. This adapter keeps those records at the caller boundary
+ * while sharing the conformance path.
+ */
+export const appendOnlyGenerationLifecycleAdapter = <
+  TBegin,
+  TImage,
+  TPatch,
+  TCommit,
+>(
+  options: AppendOnlyGenerationSinkAdapterOptions<
+    TBegin,
+    TImage,
+    TPatch,
+    TCommit
+  >,
+): GenerationLifecycleConformanceSink => ({
+  get active() {
+    return options.active();
+  },
+  begin() {
+    options.begin(options.records().begin);
+  },
+  image() {
+    options.image(options.records().image);
+  },
+  patch() {
+    options.patch(options.records().patch);
+  },
+  commit() {
+    options.commit(options.records().commit);
+  },
+  abort() {
+    options.abort();
+  },
+});
+
 export interface GenerationLifecycleConformanceResult {
   readonly vectors: number;
   readonly assertions: number;
