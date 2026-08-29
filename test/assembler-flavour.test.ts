@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   normalizeZ80AssemblerFlavour,
+  selectConcreteZ80AssemblerFlavour,
   Z80_ASSEMBLER_FLAVOUR,
   z80AssemblerFlavours,
 } from '../src/index.js';
@@ -40,6 +41,40 @@ describe('Z80 assembler flavour selection', () => {
     ).toThrow('assembler flavour must be atom or azm');
   });
 
+  it('selects a concrete assembler without using the source extension', () => {
+    expect(
+      selectConcreteZ80AssemblerFlavour({
+        requested: 'ATOM-Z80',
+        sourcePath: 'src/main.asm',
+      }),
+    ).toBe('atom');
+    expect(
+      selectConcreteZ80AssemblerFlavour({
+        requested: 'ASM80',
+        sourcePath: 'src/main.asm',
+      }),
+    ).toBe('azm');
+    expect(
+      selectConcreteZ80AssemblerFlavour({
+        defaultFlavour: Z80_ASSEMBLER_FLAVOUR.atom,
+        sourcePath: 'src/main.asm',
+      }),
+    ).toBe('atom');
+    expect(() =>
+      selectConcreteZ80AssemblerFlavour({ sourcePath: 'src/main.asm' }),
+    ).toThrow(
+      'src/main.asm does not select an assembler from its filename; set assembler to atom or azm',
+    );
+    expect(() =>
+      selectConcreteZ80AssemblerFlavour({
+        requested: 'auto',
+        sourcePath: 'src/main.asm',
+      }),
+    ).toThrow(
+      'src/main.asm does not select an assembler from its filename; set assembler to atom or azm',
+    );
+  });
+
   it('rejects invalid values at the host boundary', () => {
     expect(() => normalizeZ80AssemblerFlavour('')).toThrow(
       'assembler flavour must be atom, azm, or auto',
@@ -54,6 +89,12 @@ describe('Z80 assembler flavour selection', () => {
       normalizeZ80AssemblerFlavour(undefined, {
         // @ts-expect-error Deliberately invalid runtime input.
         defaultFlavour: 'native',
+      }),
+    ).toThrow('default assembler flavour is invalid');
+    expect(() =>
+      selectConcreteZ80AssemblerFlavour({
+        // @ts-expect-error Deliberately invalid runtime input.
+        defaultFlavour: 'auto',
       }),
     ).toThrow('default assembler flavour is invalid');
   });

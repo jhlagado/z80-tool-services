@@ -7,6 +7,11 @@ export const Z80_ASSEMBLER_FLAVOUR = Object.freeze({
 export type Z80AssemblerFlavour =
   (typeof Z80_ASSEMBLER_FLAVOUR)[keyof typeof Z80_ASSEMBLER_FLAVOUR];
 
+export type ConcreteZ80AssemblerFlavour = Exclude<
+  Z80AssemblerFlavour,
+  typeof Z80_ASSEMBLER_FLAVOUR.auto
+>;
+
 const assemblerFlavourAliases = new Map<string, Z80AssemblerFlavour>([
   ['atom', Z80_ASSEMBLER_FLAVOUR.atom],
   ['atom-z80', Z80_ASSEMBLER_FLAVOUR.atom],
@@ -19,6 +24,11 @@ export const z80AssemblerFlavours = Object.freeze([
   Z80_ASSEMBLER_FLAVOUR.atom,
   Z80_ASSEMBLER_FLAVOUR.azm,
   Z80_ASSEMBLER_FLAVOUR.auto,
+] as const);
+
+const concreteZ80AssemblerFlavours = Object.freeze([
+  Z80_ASSEMBLER_FLAVOUR.atom,
+  Z80_ASSEMBLER_FLAVOUR.azm,
 ] as const);
 
 export const normalizeZ80AssemblerFlavour = (
@@ -45,6 +55,42 @@ export const normalizeZ80AssemblerFlavour = (
   }
   if (!allowAuto && flavour === Z80_ASSEMBLER_FLAVOUR.auto) {
     throw new TypeError('assembler flavour must be atom or azm');
+  }
+  return flavour;
+};
+
+export interface SelectConcreteZ80AssemblerFlavourOptions {
+  readonly requested?: unknown;
+  readonly defaultFlavour?: ConcreteZ80AssemblerFlavour;
+  readonly sourcePath?: string;
+}
+
+/**
+ * Select the concrete assembler that will own one assembly source.
+ *
+ * `.asm` is shared by Atom and AZM. This helper deliberately does not infer a
+ * format from the filename. A command-specific caller may provide a concrete
+ * default, such as the `atom` executable defaulting to Atom. A neutral caller,
+ * such as a Debug80 project loader, should omit the default and require the
+ * project or target to name the assembler explicitly.
+ */
+export const selectConcreteZ80AssemblerFlavour = ({
+  requested,
+  defaultFlavour,
+  sourcePath = 'source',
+}: SelectConcreteZ80AssemblerFlavourOptions = {}): ConcreteZ80AssemblerFlavour => {
+  const hasDefault = defaultFlavour !== undefined;
+  if (hasDefault && !concreteZ80AssemblerFlavours.includes(defaultFlavour)) {
+    throw new TypeError('default assembler flavour is invalid');
+  }
+  const flavour = normalizeZ80AssemblerFlavour(requested, {
+    defaultFlavour: defaultFlavour ?? Z80_ASSEMBLER_FLAVOUR.auto,
+    allowAuto: true,
+  });
+  if (flavour === Z80_ASSEMBLER_FLAVOUR.auto) {
+    throw new TypeError(
+      `${sourcePath} does not select an assembler from its filename; set assembler to atom or azm`,
+    );
   }
   return flavour;
 };
