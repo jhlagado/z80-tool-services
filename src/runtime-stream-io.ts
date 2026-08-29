@@ -3,10 +3,14 @@
 import {
   DEFAULT_RUNTIME_STREAM_STATUS_POLICY,
   RUNTIME_STREAM_SERVICE,
+  type MemoryRuntimeByteStreamsState,
   type RuntimeByteStreams,
   type RuntimeStreamStatusPolicy,
 } from './runtime-streams.js';
-import type { OneByteGatewayResult } from './generation.js';
+import type {
+  GenerationLifecycleConformanceResult,
+  OneByteGatewayResult,
+} from './generation.js';
 
 export const RUNTIME_STREAM_IO_PORT = Object.freeze({
   operation: 0xe0,
@@ -32,6 +36,13 @@ export interface RuntimeStreamIoHandlers {
   read(port: number): number;
   write(port: number, value: number): void;
   reset(): void;
+}
+
+export interface RuntimeStreamIoConformanceFactory {
+  create(state: MemoryRuntimeByteStreamsState): {
+    readonly streams: RuntimeByteStreams;
+    readonly io: RuntimeStreamIoHandlers;
+  };
 }
 
 export interface RuntimeStreamIoGatewayOptions {
@@ -236,4 +247,164 @@ export const runtimeStreamIoOperationName = (
     default:
       return undefined;
   }
+};
+
+const failRuntimeStreamIo = (vector: string, message: string): never => {
+  throw new Error(`runtime stream I/O conformance ${vector}: ${message}`);
+};
+
+export const runRuntimeStreamIoConformance = (
+  factory: RuntimeStreamIoConformanceFactory,
+  policy: RuntimeStreamStatusPolicy = DEFAULT_RUNTIME_STREAM_STATUS_POLICY,
+  ports: typeof RUNTIME_STREAM_IO_PORT = RUNTIME_STREAM_IO_PORT,
+): GenerationLifecycleConformanceResult => {
+  let assertions = 0;
+
+  const expectNumber = (
+    vector: string,
+    actual: number,
+    expected: number,
+  ): void => {
+    assertions += 1;
+    if (actual !== expected) {
+      failRuntimeStreamIo(vector, `${actual} does not equal ${expected}`);
+    }
+  };
+
+  const expectBytes = (
+    vector: string,
+    actual: Uint8Array,
+    expected: readonly number[],
+  ): void => {
+    assertions += 1;
+    if (
+      actual.length !== expected.length ||
+      expected.some((byte, index) => actual[index] !== byte)
+    ) {
+      failRuntimeStreamIo(
+        vector,
+        `bytes [${[...actual]}] do not equal [${expected}]`,
+      );
+    }
+  };
+
+  const runStatus = (
+    io: RuntimeStreamIoHandlers,
+    operation: RuntimeStreamIoOperation,
+  ): number => {
+    io.write(ports.operation, operation);
+    return io.read(ports.status);
+  };
+
+  const runByteStatus = (
+    io: RuntimeStreamIoHandlers,
+    operation: RuntimeStreamIoOperation,
+    value: number,
+  ): number => {
+    io.write(ports.operation, operation);
+    io.write(ports.value, value);
+    return io.read(ports.status);
+  };
+
+  const runWordStatus = (
+    io: RuntimeStreamIoHandlers,
+    operation: RuntimeStreamIoOperation,
+    value: number,
+  ): number => {
+    io.write(ports.operation, operation);
+    io.write(ports.value, value & 0xff);
+    io.write(ports.valueHigh, value >>> 8);
+    return io.read(ports.status);
+  };
+
+  {
+    const vector = 'input-output-ports';
+    const { streams, io } = factory.create({ input: [0x41] });
+    expectNumber(
+      vector,
+      runStatus(io, RUNTIME_STREAM_IO_OPERATION.readInputByte),
+      policy.success,
+    );
+    expectNumber(vector, io.read(ports.result), 0x41);
+    expectNumber(
+      vector,
+      runStatus(io, RUNTIME_STREAM_IO_OPERATION.readInputByte),
+      policy.endOfInput,
+    );
+    expectNumber(
+      vector,
+      runByteStatus(io, RUNTIME_STREAM_IO_OPERATION.writeOutputByte, 0x42),
+      policy.success,
+    );
+    expectBytes(vector, streams.output, [0x42]);
+  }
+
+  {
+    const vector = 'storage-ports';
+    const { streams, io } = factory.create({
+      storageInput: [0x51],
+      storageOutput: [0x30],
+    });
+    expectNumber(
+      vector,
+      runStatus(io, RUNTIME_STREAM_IO_OPERATION.readStorageByte),
+      policy.success,
+    );
+    expectNumber(vector, io.read(ports.result), 0x51);
+    expectNumber(
+      vector,
+      runStatus(io, RUNTIME_STREAM_IO_OPERATION.rewindStorageInput),
+      policy.success,
+    );
+    expectNumber(
+      vector,
+      runStatus(io, RUNTIME_STREAM_IO_OPERATION.readStorageByte),
+      policy.success,
+    );
+    expectNumber(vector, io.read(ports.result), 0x51);
+    expectNumber(
+      vector,
+      runWordStatus(io, RUNTIME_STREAM_IO_OPERATION.seekStorageOutput, 1),
+      policy.success,
+    );
+    expectNumber(
+      vector,
+      runByteStatus(io, RUNTIME_STREAM_IO_OPERATION.writeStorageByte, 0x52),
+      policy.success,
+    );
+    expectBytes(vector, streams.storageOutput, [0x30, 0x52]);
+    expectNumber(vector, streams.storageOutputOffset, 2);
+    expectNumber(
+      vector,
+      runWordStatus(io, RUNTIME_STREAM_IO_OPERATION.seekStorageOutput, 0x0100),
+      policy.storageFailure,
+    );
+    expectNumber(vector, streams.storageOutputOffset, 2);
+  }
+
+  {
+    const vector = 'invalid-and-reset';
+    const { streams, io } = factory.create({
+      input: [0x61],
+      storageInput: [0x71],
+      storageOutput: [0x81],
+    });
+    io.write(ports.operation, 0xff);
+    expectNumber(vector, io.read(ports.status), policy.invalid);
+    expectNumber(
+      vector,
+      runByteStatus(io, RUNTIME_STREAM_IO_OPERATION.writeOutputByte, 0x62),
+      policy.success,
+    );
+    expectBytes(vector, streams.output, [0x62]);
+    io.reset();
+    expectNumber(
+      vector,
+      runStatus(io, RUNTIME_STREAM_IO_OPERATION.readInputByte),
+      policy.success,
+    );
+    expectNumber(vector, io.read(ports.result), 0x61);
+  }
+
+  return { vectors: 3, assertions };
 };

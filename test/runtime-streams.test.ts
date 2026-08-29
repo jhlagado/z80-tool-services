@@ -11,6 +11,7 @@ import {
   RUNTIME_STREAM_SERVICE,
   runtimeStreamIoOperationName,
   runRuntimeByteStreamsConformance,
+  runRuntimeStreamIoConformance,
 } from '../src/index.js';
 
 describe('runtime byte-stream services', () => {
@@ -99,6 +100,20 @@ describe('runtime byte-stream services', () => {
 
     io.write(RUNTIME_STREAM_IO_PORT.operation, 0xff);
     expect(io.read(RUNTIME_STREAM_IO_PORT.status)).toBe(0xfe);
+  });
+
+  it('passes reusable byte-wide I/O port conformance vectors', () => {
+    expect(
+      runRuntimeStreamIoConformance({
+        create: (state) => {
+          const streams = new MemoryRuntimeByteStreams(state);
+          return {
+            streams,
+            io: createRuntimeStreamIoHandlers(streams),
+          };
+        },
+      }),
+    ).toEqual({ vectors: 3, assertions: 21 });
   });
 
   it('names the byte-wide I/O operation ordinals', () => {
