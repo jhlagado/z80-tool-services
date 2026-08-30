@@ -5,9 +5,18 @@ import {
   MemorySourceByteProvider,
   runSourceByteProviderConformance,
   runSourceServiceGatewayConformance,
+  Z80_RESIDENT_SOURCE_PART_CAPACITY,
+  Z80_RESIDENT_SOURCE_PART_ORDINAL_MAX,
+  Z80_RESIDENT_SOURCE_PART_ORDINAL_MIN,
 } from '../src/index.js';
 
 describe('source byte provider primitives', () => {
+  it('exports the resident byte-domain source-part capacity', () => {
+    expect(Z80_RESIDENT_SOURCE_PART_ORDINAL_MIN).toBe(1);
+    expect(Z80_RESIDENT_SOURCE_PART_ORDINAL_MAX).toBe(0xff);
+    expect(Z80_RESIDENT_SOURCE_PART_CAPACITY).toBe(255);
+  });
+
   it('snapshots explicit-ordinal source records', () => {
     const bytes = Uint8Array.from([1, 2, 3]);
     const provider = new MemorySourceByteProvider([{ ordinal: 3, bytes }]);

@@ -43,6 +43,8 @@ The package exports:
 - shared Z80 assembler-flavour constants and normalization;
 - concrete assembler-flavour selection and dependency-free dispatcher helpers;
 - positive output selection by suffix with duplicate format and path checks;
+- resident byte-domain source-part constants for adapters that carry
+  source-part ordinals as one byte;
 - TypeScript provider and result types;
 - a small synchronous client;
 - a byte-transparent in-memory reference provider;

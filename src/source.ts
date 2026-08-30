@@ -11,6 +11,16 @@ export interface SourceByteProvider {
   read(partOrdinal: number, offset: number): number | undefined;
 }
 
+/**
+ * Native resident adapters that store source-part ordinals in one byte reserve
+ * ordinal zero for "no part" or host-local conventions. Language front ends
+ * therefore share the portable source-part domain 1..255 at that boundary.
+ */
+export const Z80_RESIDENT_SOURCE_PART_ORDINAL_MIN = 1;
+export const Z80_RESIDENT_SOURCE_PART_ORDINAL_MAX = 0xff;
+export const Z80_RESIDENT_SOURCE_PART_CAPACITY =
+  Z80_RESIDENT_SOURCE_PART_ORDINAL_MAX;
+
 export interface SourceByteRecord {
   readonly ordinal: number;
   readonly bytes: Uint8Array;
