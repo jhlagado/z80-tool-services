@@ -44,7 +44,8 @@ The package exports:
 - concrete assembler-flavour selection and dependency-free dispatcher helpers;
 - positive output selection by suffix with duplicate format and path checks;
 - resident byte-domain source-part constants for adapters that carry
-  source-part ordinals as one byte;
+  source-part ordinals as one byte, including Atom's zero-based 255-part
+  driver domain and Nucleus's one-based 255-part descriptor domain;
 - TypeScript provider and result types;
 - a small synchronous client;
 - a byte-transparent in-memory reference provider;

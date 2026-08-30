@@ -12,14 +12,33 @@ export interface SourceByteProvider {
 }
 
 /**
- * Native resident adapters that store source-part ordinals in one byte reserve
- * ordinal zero for "no part" or host-local conventions. Language front ends
- * therefore share the portable source-part domain 1..255 at that boundary.
+ * Source-read requests carry the source-part ordinal in one byte. The byte can
+ * represent 0..255, but a resident driver that also needs an in-band sentinel
+ * can expose at most 255 ordered source parts.
+ *
+ * Atom's native driver uses the zero-based 255-part sequence 0..254 and leaves
+ * 255 available to lower parser and diagnostic paths. Nucleus's resident
+ * source descriptors use the one-based sequence 1..255 so zero can remain a
+ * no-part value at that boundary.
  */
-export const Z80_RESIDENT_SOURCE_PART_ORDINAL_MIN = 1;
-export const Z80_RESIDENT_SOURCE_PART_ORDINAL_MAX = 0xff;
+export const Z80_SOURCE_PART_ORDINAL_BYTE_MIN = 0;
+export const Z80_SOURCE_PART_ORDINAL_BYTE_MAX = 0xff;
+
+export const Z80_ZERO_BASED_SOURCE_PART_ORDINAL_MIN = 0;
+export const Z80_ZERO_BASED_SOURCE_PART_ORDINAL_MAX = 0xfe;
+export const Z80_ZERO_BASED_SOURCE_PART_CAPACITY = 0xff;
+
+export const Z80_ONE_BASED_SOURCE_PART_ORDINAL_MIN = 1;
+export const Z80_ONE_BASED_SOURCE_PART_ORDINAL_MAX = 0xff;
+export const Z80_ONE_BASED_SOURCE_PART_CAPACITY = 0xff;
+
+/** Compatibility aliases for the one-based resident descriptor domain. */
+export const Z80_RESIDENT_SOURCE_PART_ORDINAL_MIN =
+  Z80_ONE_BASED_SOURCE_PART_ORDINAL_MIN;
+export const Z80_RESIDENT_SOURCE_PART_ORDINAL_MAX =
+  Z80_ONE_BASED_SOURCE_PART_ORDINAL_MAX;
 export const Z80_RESIDENT_SOURCE_PART_CAPACITY =
-  Z80_RESIDENT_SOURCE_PART_ORDINAL_MAX;
+  Z80_ONE_BASED_SOURCE_PART_CAPACITY;
 
 export interface SourceByteRecord {
   readonly ordinal: number;
