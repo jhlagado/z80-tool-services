@@ -256,10 +256,32 @@ export const DEFAULT_ONE_BYTE_STATUS_POLICY: OneByteStatusPolicy =
     exception: 0xef,
   });
 
-export const isOneByteUnsigned = (value: unknown): value is number =>
+export const Z80_BYTE_MAX = 0xff;
+export const Z80_WORD_MAX = 0xffff;
+export const Z80_ADDRESS_SPACE_BYTES = 0x10000;
+
+export const isUnsignedIntegerUpTo = (
+  value: unknown,
+  maximum: number,
+): value is number =>
   Number.isInteger(value) &&
   (value as number) >= 0 &&
-  (value as number) <= 0xff;
+  (value as number) <= maximum;
+
+export const isOneByteUnsigned = (value: unknown): value is number =>
+  isUnsignedIntegerUpTo(value, Z80_BYTE_MAX);
+
+export const isZ80Word = (value: unknown): value is number =>
+  isUnsignedIntegerUpTo(value, Z80_WORD_MAX);
+
+export const z80AddressEnd = (
+  base: number,
+  length: number,
+): number | undefined => {
+  if (!isZ80Word(base) || !isZ80Word(length)) return undefined;
+  const end = base + length;
+  return end <= Z80_ADDRESS_SPACE_BYTES ? end : undefined;
+};
 
 export const oneByteValue = (value: unknown): number | undefined =>
   isOneByteUnsigned(value) ? value : undefined;

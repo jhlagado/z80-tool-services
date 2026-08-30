@@ -5,12 +5,17 @@ import {
   GenerationLifecycle,
   GenerationLifecycleError,
   MemoryGenerationSpool,
+  Z80_ADDRESS_SPACE_BYTES,
+  Z80_BYTE_MAX,
+  Z80_WORD_MAX,
   appendOnlyGenerationLifecycleAdapter,
   invokeOneByteStatus,
   normalizeOneByteStatus,
+  isUnsignedIntegerUpTo,
   oneByteValue,
   runGenerationLifecycleConformance,
   runOneByteGatewayConformance,
+  z80AddressEnd,
 } from '../src/index.js';
 
 describe('generation storage primitives', () => {
@@ -118,7 +123,10 @@ describe('generation storage primitives', () => {
           lifecycle.begin();
           events.push(`begin:${record.target}`);
         },
-        image(record: { readonly address: number; readonly bytes: Uint8Array }) {
+        image(record: {
+          readonly address: number;
+          readonly bytes: Uint8Array;
+        }) {
           lifecycle.requireActive();
           if (record.address !== cursor) {
             throw new Error('non-contiguous image');
@@ -126,7 +134,10 @@ describe('generation storage primitives', () => {
           cursor += record.bytes.length;
           events.push(`image:${record.address}:${record.bytes.length}`);
         },
-        patch(record: { readonly address: number; readonly bytes: Uint8Array }) {
+        patch(record: {
+          readonly address: number;
+          readonly bytes: Uint8Array;
+        }) {
           lifecycle.requireActive();
           if (record.bytes.length === 0 || record.address < 0x4000) {
             throw new Error('invalid patch');
@@ -161,6 +172,13 @@ describe('generation storage primitives', () => {
   });
 
   it('normalizes one-byte values and statuses', () => {
+    expect(Z80_BYTE_MAX).toBe(0xff);
+    expect(Z80_WORD_MAX).toBe(0xffff);
+    expect(Z80_ADDRESS_SPACE_BYTES).toBe(0x10000);
+    expect(isUnsignedIntegerUpTo(5, 5)).toBe(true);
+    expect(isUnsignedIntegerUpTo(6, 5)).toBe(false);
+    expect(isUnsignedIntegerUpTo(-1, 5)).toBe(false);
+    expect(isUnsignedIntegerUpTo(1.5, 5)).toBe(false);
     expect(oneByteValue(0)).toBe(0);
     expect(oneByteValue(0xff)).toBe(0xff);
     expect(oneByteValue(-1)).toBeUndefined();
@@ -178,6 +196,16 @@ describe('generation storage primitives', () => {
         exception: 3,
       }),
     ).toBe(1);
+  });
+
+  it('checks Z80 address extents without wrapping the address space', () => {
+    expect(z80AddressEnd(0, 0x10000)).toBeUndefined();
+    expect(z80AddressEnd(0, 0xffff)).toBe(0xffff);
+    expect(z80AddressEnd(1, 0xffff)).toBe(0x10000);
+    expect(z80AddressEnd(2, 0xffff)).toBeUndefined();
+    expect(z80AddressEnd(-1, 1)).toBeUndefined();
+    expect(z80AddressEnd(0x10000, 0)).toBeUndefined();
+    expect(z80AddressEnd(0x8000, 0x8000)).toBe(0x10000);
   });
 
   it('converts thrown host operations to one-byte status results', () => {
