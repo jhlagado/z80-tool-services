@@ -30,11 +30,19 @@ reading project or target configuration. Command-owned tools may pass a
 concrete default, but the shared package still performs the same normalization
 and rejects unresolved `auto` before any assembler-specific code runs.
 
+The main package also exports the shared positive-output selector used by the
+desktop CLIs. A tool supplies its own suffix table, including any
+tool-specific rejection messages for formats it does not implement. The shared
+selector performs case-insensitive suffix matching, prefers the longest suffix,
+resolves paths against the caller's base directory, and rejects repeated
+formats or output paths before any files are written.
+
 The package exports:
 
 - the canonical 16-byte request layout, operation numbers, and status values;
 - shared Z80 assembler-flavour constants and normalization;
 - concrete assembler-flavour selection and dependency-free dispatcher helpers;
+- positive output selection by suffix with duplicate format and path checks;
 - TypeScript provider and result types;
 - a small synchronous client;
 - a byte-transparent in-memory reference provider;

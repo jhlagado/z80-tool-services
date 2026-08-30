@@ -34,9 +34,9 @@ describe('Z80 assembler flavour selection', () => {
   });
 
   it('lets callers disable auto when a concrete assembler is required', () => {
-    expect(
-      normalizeZ80AssemblerFlavour('atom', { allowAuto: false }),
-    ).toBe('atom');
+    expect(normalizeZ80AssemblerFlavour('atom', { allowAuto: false })).toBe(
+      'atom',
+    );
     expect(() =>
       normalizeZ80AssemblerFlavour('auto', { allowAuto: false }),
     ).toThrow('assembler flavour must be atom or azm');
