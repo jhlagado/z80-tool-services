@@ -38,7 +38,11 @@ matching, prefers the longest suffix, resolves paths against the caller's base
 directory, and rejects repeated formats or output paths before any files are
 written. The shared publisher stages every requested file, replaces targets
 only after all staged writes have succeeded, and restores previous targets if
-a later replacement fails.
+a later replacement fails. The same publication module also provides a
+content-addressed generation-directory transaction for tools that publish an
+immutable artifact set and atomically advance a `current` pointer. Tool
+packages still define their artifact names and manifest schema; the shared
+layer owns the staging, conflict detection, cleanup, and pointer swap.
 
 The package exports:
 
@@ -47,6 +51,7 @@ The package exports:
 - concrete assembler-flavour selection and dependency-free dispatcher helpers;
 - positive output selection by suffix with duplicate format and path checks;
 - transactional positive-output file publication;
+- content-addressed artifact-generation publication;
 - resident byte-domain source-part constants for adapters that carry
   source-part ordinals as one byte, including Atom's zero-based 255-part
   driver domain and Nucleus's one-based 255-part descriptor domain;
