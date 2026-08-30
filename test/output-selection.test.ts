@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   selectOutputFormatBySuffix,
+  splitPositiveOutputArguments,
   validatePositiveOutputSelections,
 } from '../src/index.js';
 
@@ -61,5 +62,28 @@ describe('positive output selection', () => {
     expect(() => selectOutputFormatBySuffix('build/program', formats)).toThrow(
       'output path has no recognized format suffix: build/program',
     );
+  });
+
+  it('splits the common positive-output CLI shape', () => {
+    expect(splitPositiveOutputArguments({
+      positionals: ['src/main.asm', 'build/main.bin', 'build/main.hex'],
+    })).toEqual({
+      input: 'src/main.asm',
+      outputPaths: ['build/main.bin', 'build/main.hex'],
+      output: 'build/main.bin',
+    });
+    expect(splitPositiveOutputArguments({
+      positionals: ['src/main.asm', 'build/main.hex'],
+      optionOutputs: ['build/main.bin'],
+    })).toEqual({
+      input: 'src/main.asm',
+      outputPaths: ['build/main.bin', 'build/main.hex'],
+      output: 'build/main.bin',
+    });
+    expect(splitPositiveOutputArguments({ positionals: [] })).toEqual({
+      input: undefined,
+      outputPaths: [],
+      output: undefined,
+    });
   });
 });

@@ -43,6 +43,10 @@ content-addressed generation-directory transaction for tools that publish an
 immutable artifact set and atomically advance a `current` pointer. Tool
 packages still define their artifact names and manifest schema; the shared
 layer owns the staging, conflict detection, cleanup, and pointer swap.
+The output-selection module also exposes the common positive-output CLI split:
+the first positional argument is the input, later positional arguments are
+outputs, and any compatibility output-option values are prepended to that
+output list.
 
 The package exports:
 
@@ -50,6 +54,7 @@ The package exports:
 - shared Z80 assembler-flavour constants and normalization;
 - concrete assembler-flavour selection and dependency-free dispatcher helpers;
 - positive output selection by suffix with duplicate format and path checks;
+- positive-output CLI argument splitting;
 - transactional positive-output file publication;
 - content-addressed artifact-generation publication;
 - resident byte-domain source-part constants for adapters that carry

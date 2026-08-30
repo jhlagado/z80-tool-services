@@ -18,6 +18,12 @@ export interface PositiveOutputSelectionOptions<Format extends string> {
   readonly baseDirectory?: string;
 }
 
+export interface PositiveOutputCliArgumentSplit {
+  readonly input: string | undefined;
+  readonly outputPaths: readonly string[];
+  readonly output: string | undefined;
+}
+
 const pathKey = (selectedPath: string): string =>
   process.platform === 'win32' ? selectedPath.toLowerCase() : selectedPath;
 
@@ -60,4 +66,22 @@ export const validatePositiveOutputSelections = <Format extends string>({
       return Object.freeze({ format, path: selectedPath });
     }),
   );
+};
+
+export const splitPositiveOutputArguments = ({
+  positionals,
+  optionOutputs = [],
+}: {
+  readonly positionals: readonly string[];
+  readonly optionOutputs?: readonly string[];
+}): PositiveOutputCliArgumentSplit => {
+  const outputPaths = Object.freeze([
+    ...optionOutputs,
+    ...positionals.slice(1),
+  ]);
+  return Object.freeze({
+    input: positionals[0],
+    outputPaths,
+    output: outputPaths[0],
+  });
 };
