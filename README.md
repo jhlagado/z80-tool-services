@@ -47,12 +47,16 @@ The output-selection module also exposes the common positive-output CLI split:
 the first positional argument is the input, later positional arguments are
 outputs, and any compatibility output-option values are prepended to that
 output list.
+The CLI helper module also provides a deliberately small option-value reader
+for commands that keep their own option vocabulary but share the same
+"next argument is required" failure rule.
 
 The package exports:
 
 - the canonical 16-byte request layout, operation numbers, and status values;
 - shared Z80 assembler-flavour constants and normalization;
 - concrete assembler-flavour selection and dependency-free dispatcher helpers;
+- small CLI argument helpers that do not impose a command vocabulary;
 - positive output selection by suffix with duplicate format and path checks;
 - positive-output CLI argument splitting;
 - transactional positive-output file publication;

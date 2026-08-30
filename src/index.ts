@@ -1,6 +1,7 @@
 export * from './abi.js';
 export * from './assembler-flavour.js';
 export * from './client.js';
+export * from './cli-arguments.js';
 export * from './console.js';
 export * from './conformance.js';
 export * from './generation.js';
