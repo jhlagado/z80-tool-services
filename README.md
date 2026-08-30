@@ -30,12 +30,15 @@ reading project or target configuration. Command-owned tools may pass a
 concrete default, but the shared package still performs the same normalization
 and rejects unresolved `auto` before any assembler-specific code runs.
 
-The main package also exports the shared positive-output selector used by the
-desktop CLIs. A tool supplies its own suffix table, including any
-tool-specific rejection messages for formats it does not implement. The shared
-selector performs case-insensitive suffix matching, prefers the longest suffix,
-resolves paths against the caller's base directory, and rejects repeated
-formats or output paths before any files are written.
+The main package also exports the shared positive-output selector and file
+publication transaction used by the desktop CLIs. A tool supplies its own
+suffix table, including any tool-specific rejection messages for formats it
+does not implement. The shared selector performs case-insensitive suffix
+matching, prefers the longest suffix, resolves paths against the caller's base
+directory, and rejects repeated formats or output paths before any files are
+written. The shared publisher stages every requested file, replaces targets
+only after all staged writes have succeeded, and restores previous targets if
+a later replacement fails.
 
 The package exports:
 
@@ -43,6 +46,7 @@ The package exports:
 - shared Z80 assembler-flavour constants and normalization;
 - concrete assembler-flavour selection and dependency-free dispatcher helpers;
 - positive output selection by suffix with duplicate format and path checks;
+- transactional positive-output file publication;
 - resident byte-domain source-part constants for adapters that carry
   source-part ordinals as one byte, including Atom's zero-based 255-part
   driver domain and Nucleus's one-based 255-part descriptor domain;
