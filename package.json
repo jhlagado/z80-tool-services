@@ -19,6 +19,8 @@
       "import": "./source-preparation/index.mjs"
     },
     "./native/z80-tool-services-v1.asmi": "./native/z80-tool-services-v1.asmi",
+    "./native/cpm22-final-image.asm": "./native/cpm22-final-image.asm",
+    "./native/nobj-consumer.asm": "./native/nobj-consumer.asm",
     "./package.json": "./package.json"
   },
   "files": [
@@ -47,13 +49,15 @@
     "lint": "eslint src test --ext .ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.md\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.md\"",
-    "pretest": "npm run build",
+    "pretest": "npm run build -w @jhlagado/azm && npm run build -w @jhlagado/debug80-runtime && npm run build",
     "test": "vitest run",
     "test:package": "node scripts/smoke-package.mjs",
     "prepack": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
+    "@jhlagado/azm": "0.3.9",
+    "@jhlagado/debug80-runtime": "0.1.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",

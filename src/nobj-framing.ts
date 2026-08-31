@@ -76,7 +76,8 @@ const decodeRecords = (serialized: Uint8Array): NobjFramedRecord[] => {
   const records: NobjFramedRecord[] = [];
   let cursor = 0;
   while (cursor < serialized.length) {
-    if (serialized.length - cursor < 3) fail('NOBJ has a truncated record header');
+    if (serialized.length - cursor < 3)
+      fail('NOBJ has a truncated record header');
     const start = cursor;
     const kind = serialized[cursor] ?? 0;
     if (kind < NOBJ_RECORD_KIND.begin || kind > NOBJ_RECORD_KIND.commit) {
@@ -85,14 +86,17 @@ const decodeRecords = (serialized: Uint8Array): NobjFramedRecord[] => {
     const length = u16(serialized, cursor + 1);
     const payloadStart = cursor + 3;
     const payloadEnd = payloadStart + length;
-    if (payloadEnd > serialized.length) fail('NOBJ has a truncated record payload');
-    records.push(Object.freeze({
-      kind,
-      start,
-      payloadStart,
-      payloadEnd,
-      payload: serialized.slice(payloadStart, payloadEnd),
-    }));
+    if (payloadEnd > serialized.length)
+      fail('NOBJ has a truncated record payload');
+    records.push(
+      Object.freeze({
+        kind,
+        start,
+        payloadStart,
+        payloadEnd,
+        payload: serialized.slice(payloadStart, payloadEnd),
+      }),
+    );
     cursor = payloadEnd;
     if (kind === NOBJ_RECORD_KIND.commit && cursor !== serialized.length) {
       fail('NOBJ contains a byte after COMMIT');
@@ -125,8 +129,10 @@ export const decodeNobjEnvelope = (
     minor: begin.payload[5] ?? 0,
   });
   if (
-    (options.majorVersion !== undefined && version.major !== options.majorVersion) ||
-    (options.minorVersion !== undefined && version.minor !== options.minorVersion)
+    (options.majorVersion !== undefined &&
+      version.major !== options.majorVersion) ||
+    (options.minorVersion !== undefined &&
+      version.minor !== options.minorVersion)
   ) {
     fail(
       `NOBJ version is ${version.major}.${version.minor}, expected ${
@@ -176,7 +182,8 @@ export const decodeNobjEnvelope = (
     }
   }
   const finalMap = map ?? fail('NOBJ stream has no MAP');
-  const finalCommit = commitRecord ?? fail('NOBJ stream has no terminal COMMIT');
+  const finalCommit =
+    commitRecord ?? fail('NOBJ stream has no terminal COMMIT');
   if (records.at(-1) !== finalCommit) {
     fail('NOBJ stream has no terminal COMMIT');
   }
@@ -193,7 +200,8 @@ export const decodeNobjEnvelope = (
     fail('NOBJ COMMIT record count does not match the stream');
   }
   const calculated = nobjCrc16CcittFalse(serialized.slice(0, -2));
-  if (calculated !== commit.crc16) fail('NOBJ COMMIT CRC does not match the stream');
+  if (calculated !== commit.crc16)
+    fail('NOBJ COMMIT CRC does not match the stream');
 
   return Object.freeze({
     serialized,

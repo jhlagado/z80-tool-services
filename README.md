@@ -37,6 +37,19 @@ Native CP/M tools can include `native/cpm22-final-image.asm` to render one or
 more finalized memory segments as Intel HEX through ordinary BDOS sequential
 writes. File creation and transactional rename remain the caller's job.
 
+Native tools can include `native/nobj-consumer.asm` to consume a stored NOBJ
+without loading the complete file into Z80 RAM. `ZN_MAT` validates the common
+record envelope, phase order, version, record count, and CRC; calls the
+tool-selected Atom or Nucleus profile validator; rewinds the input; and only
+then applies IMAGE and PATCH bytes. The caller supplies byte-read, rewind,
+profile-validation, and target-store routines plus a 20-byte state block.
+
+The input must remain unchanged and readable for both passes. A direct-memory
+store routine must be infallible after profile validation. A fallible target
+uses tentative storage and publishes it only after `ZN_MAT` succeeds. File
+opening, naming, closing, replacement, and rollback belong to the platform
+adapter rather than the NOBJ consumer.
+
 The main package also defines the shared assembler-flavour names used by Node
 tools that accept ordinary `.asm` files. Callers choose `atom`, `azm`, or
 `auto`; filenames do not select a dialect by themselves. Neutral tools should
@@ -96,6 +109,8 @@ The package exports:
   standard output, storage input, storage output, seek, rewind, and reset;
 - reusable provider and gateway conformance vectors; and
 - `native/z80-tool-services-v1.asmi`, generated from the TypeScript authority;
+- native Z80 NOBJ validation/materialization and CP/M Intel HEX rendering
+  modules; and
 - the `@jhlagado/z80-tool-services/source-preparation` host API.
 
 Compiler-specific source, output, and diagnostic adapters remain in Atom and

@@ -20,7 +20,10 @@ const envelope = (): Uint8Array => {
     record(NOBJ_RECORD_KIND.patch, [0, 0, 1, 0x00]),
     record(NOBJ_RECORD_KIND.map, [0x41, 0, 0, 0, 1]),
   ];
-  const commitPrefix = [NOBJ_RECORD_KIND.commit, 7, 0,
+  const commitPrefix = [
+    NOBJ_RECORD_KIND.commit,
+    7,
+    0,
     records.length + 1,
     0,
     0,
@@ -57,7 +60,9 @@ describe('shared NOBJ framing', () => {
 
     const phase = valid.slice();
     phase[9] = NOBJ_RECORD_KIND.patch;
-    expect(() => decodeNobjEnvelope(phase)).toThrow('PATCH requires at least one IMAGE');
+    expect(() => decodeNobjEnvelope(phase)).toThrow(
+      'PATCH requires at least one IMAGE',
+    );
 
     expect(() => decodeNobjEnvelope(valid, { majorVersion: 1 })).toThrow(
       'NOBJ version is 0.2, expected 1.2',
@@ -85,7 +90,11 @@ describe('shared NOBJ framing', () => {
     const commitPrefix = [NOBJ_RECORD_KIND.commit, 7, 0, 3, 0, 0, 0, 1];
     const covered = Uint8Array.from([...withoutData, ...commitPrefix]);
     const checksum = nobjCrc16CcittFalse(covered);
-    const complete = Uint8Array.from([...covered, checksum & 0xff, checksum >>> 8]);
+    const complete = Uint8Array.from([
+      ...covered,
+      checksum & 0xff,
+      checksum >>> 8,
+    ]);
 
     expect(() => decodeNobjEnvelope(complete, { requireImage: true })).toThrow(
       'requires at least one IMAGE',
