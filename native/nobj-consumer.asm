@@ -3,8 +3,9 @@
 ; The including program supplies three routines:
 ;
 ;   ZN_READ   Read the next stored-object byte. Return it in A with carry clear.
-;             At end of input return A=ZN_EOF with carry set. Other carry-set
-;             values are input failures. IX must be preserved.
+;             At end of input return A=ZN_EOF with carry set. ZN_EOF is
+;             reserved exclusively for EOF; other carry-set values are input
+;             failures. IX must be preserved.
 ;   ZN_REW    Rewind the stored object. Return A=0 and carry clear on success.
 ;             IX must be preserved.
 ;   ZN_PROF   Validate the selected BEGIN, IMAGE/PATCH and MAP profile after

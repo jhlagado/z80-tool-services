@@ -189,6 +189,7 @@ beforeAll(async () => {
 
 const run = (
   object: Uint8Array,
+  options: Readonly<{ stateAddress?: number }> = {},
 ): Readonly<{ status: number; carry: number; memory: Uint8Array }> => {
   const memory = new Uint8Array(0x10000);
   memory.set(harness.bytes, LOAD);
@@ -201,13 +202,14 @@ const run = (
     harness.symbols.INPUT + object.length,
   );
   putWord(memory, harness.symbols.LIMIT, harness.symbols.INPUT + object.length);
-  memory[harness.symbols.STATE] = 0;
-  memory[harness.symbols.STATE + 1] = 2;
-  memory[harness.symbols.STATE + 2] = 0;
+  const state = options.stateAddress ?? harness.symbols.STATE;
+  memory[state] = 0;
+  memory[state + 1] = 2;
+  memory[state + 2] = 0;
   putWord(memory, STACK, RETURN);
 
   const runtime = createZ80Runtime({ memory, startAddress: LOAD }, LOAD);
-  runtime.cpu.ix = harness.symbols.STATE;
+  runtime.cpu.ix = state;
   runtime.cpu.sp = STACK;
   runtime.cpu.pc = harness.symbols.ZN_MAT;
   for (
@@ -356,5 +358,13 @@ describe('native NOBJ consumer', () => {
     expect([...outcome.memory.slice(TARGET, TARGET + 3)]).toEqual([
       0xcc, 0xcc, 0xcc,
     ]);
+  });
+
+  it('rejects a target capacity that overlaps the consumer state block', () => {
+    const outcome = run(validObject(), { stateAddress: TARGET + 8 });
+    expect({ status: outcome.status, carry: outcome.carry }).toEqual({
+      status: 7,
+      carry: 1,
+    });
   });
 });
