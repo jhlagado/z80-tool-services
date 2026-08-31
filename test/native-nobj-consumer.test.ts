@@ -35,10 +35,26 @@ const record = (kind: number, payload: readonly number[]): number[] => [
 
 const atomObject = (
   dataRecords: readonly number[][],
-  { usedLength = 3, finalCursor = TARGET + usedLength } = {},
+  { usedLength = 3, finalCursor = TARGET + usedLength, fill = 0 } = {},
 ): Uint8Array => {
   const records = [
-    record(1, [0x4e, 0x4f, 0x42, 0x4a, 0, 2, 0, 0, 0, 1, 0, 0, 0x50, 0x20, 0]),
+    record(1, [
+      0x4e,
+      0x4f,
+      0x42,
+      0x4a,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1,
+      fill,
+      0,
+      0x50,
+      0x20,
+      0,
+    ]),
     ...dataRecords,
     record(4, [
       0x41,
@@ -114,16 +130,29 @@ RET
 
 ;@ROUTINE IN A,B,DE OUT A,CARRY CLOBBERS BC,DE,HL,ZERO,SIGN,PARITY,HALFCARRY
 ZN_STORE:
+PUSH AF
+LD   A,(STORE_FAIL)
+OR   A
+JR   NZ,STORE_BAD
+POP  AF
 LD   (DE),A
 LD   BC,$B4C4
 LD   DE,$D4E4
 LD   HL,$A4A4
 OR   A
 RET
+STORE_BAD:
+POP  AF
+LD   BC,$B5C5
+LD   DE,$D5E5
+LD   HL,$A5A5
+SCF
+RET
 
 STATE: DS ZA_SIZE
 CURSOR: DW INPUT
 LIMIT: DW INPUT
+STORE_FAIL: DB 0
 INPUT: DS 512
 IMAGE_END:
 `;
@@ -189,7 +218,7 @@ beforeAll(async () => {
 
 const run = (
   object: Uint8Array,
-  options: Readonly<{ stateAddress?: number }> = {},
+  options: Readonly<{ stateAddress?: number; storeFailure?: boolean }> = {},
 ): Readonly<{ status: number; carry: number; memory: Uint8Array }> => {
   const memory = new Uint8Array(0x10000);
   memory.set(harness.bytes, LOAD);
@@ -202,6 +231,7 @@ const run = (
     harness.symbols.INPUT + object.length,
   );
   putWord(memory, harness.symbols.LIMIT, harness.symbols.INPUT + object.length);
+  memory[harness.symbols.STORE_FAIL] = options.storeFailure === true ? 1 : 0;
   const state = options.stateAddress ?? harness.symbols.STATE;
   memory[state] = 0;
   memory[state + 1] = 2;
@@ -347,6 +377,30 @@ describe('native NOBJ consumer', () => {
       carry: 0,
     });
     expect([...outcome.memory.slice(TARGET, TARGET + 3)]).toEqual([7, 8, 9]);
+  });
+
+  it('initializes implicit gaps with the BEGIN fill byte before applying IMAGE', () => {
+    const outcome = run(
+      atomObject([record(2, [0, 0, 0x50, 1]), record(2, [0, 2, 0x50, 3])], {
+        fill: 0x5a,
+      }),
+    );
+    expect({ status: outcome.status, carry: outcome.carry }).toEqual({
+      status: 0,
+      carry: 0,
+    });
+    expect([...outcome.memory.slice(TARGET, TARGET + 3)]).toEqual([1, 0x5a, 3]);
+  });
+
+  it('reports target initialization failure before applying IMAGE or PATCH', () => {
+    const outcome = run(validObject(), { storeFailure: true });
+    expect({ status: outcome.status, carry: outcome.carry }).toEqual({
+      status: 8,
+      carry: 1,
+    });
+    expect([...outcome.memory.slice(TARGET, TARGET + 3)]).toEqual([
+      0xcc, 0xcc, 0xcc,
+    ]);
   });
 
   it('accepts an empty Atom image with a retained zero used length', () => {

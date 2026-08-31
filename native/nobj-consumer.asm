@@ -11,13 +11,15 @@
 ;   ZN_PROF   Validate the selected BEGIN, IMAGE/PATCH and MAP profile after
 ;             the common envelope has passed. IX addresses the state block.
 ;             It may rewind and read the object. Carry reports failure.
+;   ZN_INIT   Initialize the validated target's used extents with its fill byte.
+;             IX addresses the profile state. Carry reports a target failure.
 ;   ZN_STORE  Store one final byte. A is the byte, B the bank and DE the target
 ;             address. IX must be preserved. The sink must be infallible for a
 ;             profile-validated target, or write into tentative storage.
 ;
-; ZN_MAT validates the complete envelope, invokes ZN_PROF, rewinds, and only
-; then applies IMAGE and PATCH bytes. It performs no symbol resolution: PATCH
-; payloads already contain final bytes.
+; ZN_MAT validates the complete envelope, invokes ZN_PROF, initializes the
+; target, rewinds, and only then applies IMAGE and PATCH bytes. It performs no
+; symbol resolution: PATCH payloads already contain final bytes.
 ;
 ; IX points at a caller-owned ZN_SIZE-byte state block. The caller initializes
 ; ZN_MAJOR, ZN_MINOR and ZN_FLAGS. Bit 0 of ZN_FLAGS requires an IMAGE record.
@@ -250,6 +252,8 @@ CALL ZN_VALID
 RET  C
 CALL ZN_PROF
 JP   C,ZN_FPROF
+CALL ZN_INIT
+JP   C,ZN_FSTORE
 CALL ZN_REW
 JP   C,ZN_FIO
 ZN_MHEAD:

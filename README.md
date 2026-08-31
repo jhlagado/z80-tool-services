@@ -40,15 +40,16 @@ writes. File creation and transactional rename remain the caller's job.
 Native tools can include `native/nobj-consumer.asm` to consume a stored NOBJ
 without loading the complete file into Z80 RAM. `ZN_MAT` validates the common
 record envelope, phase order, version, record count, and CRC; calls the
-tool-selected Atom or Nucleus profile validator; rewinds the input; and only
-then applies IMAGE and PATCH bytes. The caller supplies byte-read, rewind,
-profile-validation, and target-store routines plus a 20-byte state block. The
-selected target memory must not overlap that state block.
+tool-selected Atom or Nucleus profile validator; initializes used target bytes
+with the profile fill value; rewinds the input; and only then applies IMAGE and
+PATCH bytes. The caller supplies byte-read, rewind, profile-validation,
+target-initialization, and target-store routines plus a 20-byte state block.
+The selected target memory must not overlap that state block.
 
 `native/atom-flat-nobj.asm` supplies the Atom 0.2 profile hook. It validates the
 flat bank-zero BEGIN and MAP fields, image bounds and monotonicity, used and
 final extents, entry address, source-part banks, PATCH coverage, and PATCH
-non-overlap. It uses a 48-byte state block and rejects a target capacity that
+non-overlap. It uses a 49-byte state block and rejects a target capacity that
 overlaps it. PATCH verification repeats
 sequential scans instead of retaining an address bitmap or interval list, so
 its RAM cost does not grow with the object.
