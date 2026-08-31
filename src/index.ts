@@ -11,3 +11,4 @@ export * from './output-publication.js';
 export * from './runtime-stream-io.js';
 export * from './runtime-streams.js';
 export * from './source.js';
+export * from './target-image.js';
