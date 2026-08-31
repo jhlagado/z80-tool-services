@@ -21,6 +21,7 @@
     "./native/z80-tool-services-v1.asmi": "./native/z80-tool-services-v1.asmi",
     "./native/cpm22-final-image.asm": "./native/cpm22-final-image.asm",
     "./native/nobj-consumer.asm": "./native/nobj-consumer.asm",
+    "./native/atom-flat-nobj.asm": "./native/atom-flat-nobj.asm",
     "./package.json": "./package.json"
   },
   "files": [

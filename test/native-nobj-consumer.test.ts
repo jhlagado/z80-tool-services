@@ -33,23 +33,46 @@ const record = (kind: number, payload: readonly number[]): number[] => [
   ...payload,
 ];
 
-const validObject = (): Uint8Array => {
+const atomObject = (
+  dataRecords: readonly number[][],
+  { usedLength = 3, finalCursor = TARGET + usedLength } = {},
+): Uint8Array => {
   const records = [
     record(1, [0x4e, 0x4f, 0x42, 0x4a, 0, 2, 0, 0, 0, 1, 0, 0, 0x50, 0x20, 0]),
-    record(2, [0, 0, 0x50, 0x11, 0x22, 0x33]),
-    record(3, [0, 1, 0x50, 0xaa]),
-    record(4, [0x41]),
+    ...dataRecords,
+    record(4, [
+      0x41,
+      0,
+      0,
+      0,
+      0x50,
+      usedLength & 0xff,
+      usedLength >>> 8,
+      finalCursor & 0xff,
+      finalCursor >>> 8,
+      1,
+      0,
+    ]),
   ];
-  const commitPrefix = [5, 7, 0, 5, 0, 0, 0, 0x50];
+  const count = records.length + 1;
+  const commitPrefix = [5, 7, 0, count & 0xff, count >>> 8, 0, 0, 0x50];
   const covered = Uint8Array.from([...records.flat(), ...commitPrefix]);
   const crc = nobjCrc16CcittFalse(covered);
   return Uint8Array.from([...covered, crc & 0xff, crc >>> 8]);
 };
 
-const harnessSource = (consumer: string): string => `
+const validObject = (): Uint8Array =>
+  atomObject([
+    record(2, [0, 0, 0x50, 0x11, 0x22, 0x33]),
+    record(3, [0, 1, 0x50, 0xaa]),
+  ]);
+
+const harnessSource = (consumer: string, atomProfile: string): string => `
 ORG $0100
 
 ${consumer}
+
+${atomProfile}
 
 ; Memory-backed proof provider for the shared consumer.
 ;@ROUTINE OUT A,CARRY CLOBBERS DE,HL,ZERO,SIGN,PARITY,HALFCARRY
@@ -78,39 +101,28 @@ LD   (CURSOR),HL
 XOR  A
 RET
 
-; The profile hook is deliberately visible in the proof: a failure must occur
-; before any target byte is changed.
-;@ROUTINE IN IX OUT A,CARRY CLOBBERS ZERO,SIGN,PARITY,HALFCARRY
-ZN_PROF:
-LD   A,(PROFAIL)
-OR   A
-RET  Z
-SCF
-RET
-
 ;@ROUTINE IN A,B,DE OUT A,CARRY CLOBBERS ZERO,SIGN,PARITY,HALFCARRY
 ZN_STORE:
 LD   (DE),A
 OR   A
 RET
 
-STATE: DS ZN_SIZE
+STATE: DS ZA_SIZE
 CURSOR: DW INPUT
 LIMIT: DW INPUT
-PROFAIL: DB 0
 INPUT: DS 512
 IMAGE_END:
 `;
 
 const buildHarness = async (): Promise<Harness> => {
-  const consumer = await readFile(
-    new URL('../native/nobj-consumer.asm', import.meta.url),
-    'utf8',
-  );
+  const [consumer, atomProfile] = await Promise.all([
+    readFile(new URL('../native/nobj-consumer.asm', import.meta.url), 'utf8'),
+    readFile(new URL('../native/atom-flat-nobj.asm', import.meta.url), 'utf8'),
+  ]);
   const directory = await mkdtemp(join(tmpdir(), 'zts-native-nobj-'));
   try {
     const sourcePath = join(directory, 'proof.asm');
-    const source = harnessSource(consumer)
+    const source = harnessSource(consumer, atomProfile)
       .split(/\r\n|\n|\r/)
       .map((line) => {
         const annotation = /^\s*;@(ROUTINE|EXPECTOUT)\b(.*)$/i.exec(line);
@@ -163,18 +175,21 @@ beforeAll(async () => {
 
 const run = (
   object: Uint8Array,
-  options: Readonly<{ profileFailure?: boolean }> = {},
 ): Readonly<{ status: number; carry: number; memory: Uint8Array }> => {
   const memory = new Uint8Array(0x10000);
   memory.set(harness.bytes, LOAD);
-  memory.fill(0xcc, TARGET, TARGET + 3);
+  memory.fill(0xcc, TARGET, TARGET + 16);
   memory.set(object, harness.symbols.INPUT);
-  putWord(memory, harness.symbols.CURSOR, harness.symbols.INPUT);
+  // The public entry owns both rewinds; callers need not pre-position input.
+  putWord(
+    memory,
+    harness.symbols.CURSOR,
+    harness.symbols.INPUT + object.length,
+  );
   putWord(memory, harness.symbols.LIMIT, harness.symbols.INPUT + object.length);
-  memory[harness.symbols.PROFAIL] = options.profileFailure === true ? 1 : 0;
   memory[harness.symbols.STATE] = 0;
   memory[harness.symbols.STATE + 1] = 2;
-  memory[harness.symbols.STATE + 2] = 1;
+  memory[harness.symbols.STATE + 2] = 0;
   putWord(memory, STACK, RETURN);
 
   const runtime = createZ80Runtime({ memory, startAddress: LOAD }, LOAD);
@@ -221,6 +236,7 @@ describe('native NOBJ consumer', () => {
     expect(harness.symbols.ZN_END - harness.symbols.ZN_VALID).toBeLessThan(
       1024,
     );
+    expect(harness.symbols.ZA_END - harness.symbols.ZN_PROF).toBeLessThan(2048);
   });
 
   it('rejects a bad CRC before changing target memory', () => {
@@ -247,11 +263,81 @@ describe('native NOBJ consumer', () => {
     ]);
   });
 
-  it('runs profile validation before changing target memory', () => {
-    const outcome = run(validObject(), { profileFailure: true });
+  it('runs Atom profile validation before changing target memory', () => {
+    const object = validObject();
+    object[9] = 1;
+    const crc = nobjCrc16CcittFalse(object.slice(0, -2));
+    object[object.length - 2] = crc & 0xff;
+    object[object.length - 1] = crc >>> 8;
+    const outcome = run(object);
     expect({ status: outcome.status, carry: outcome.carry }).toEqual({
       status: 7,
       carry: 1,
+    });
+    expect([...outcome.memory.slice(TARGET, TARGET + 3)]).toEqual([
+      0xcc, 0xcc, 0xcc,
+    ]);
+  });
+
+  it('rejects a patch that is not covered by IMAGE bytes', () => {
+    const outcome = run(
+      atomObject(
+        [
+          record(2, [0, 0, 0x50, 0x11, 0x22, 0x33]),
+          record(3, [0, 3, 0x50, 0xaa]),
+        ],
+        { usedLength: 4 },
+      ),
+    );
+    expect({ status: outcome.status, carry: outcome.carry }).toEqual({
+      status: 7,
+      carry: 1,
+    });
+    expect([...outcome.memory.slice(TARGET, TARGET + 4)]).toEqual([
+      0xcc, 0xcc, 0xcc, 0xcc,
+    ]);
+  });
+
+  it('rejects overlapping patches before changing target memory', () => {
+    const outcome = run(
+      atomObject(
+        [
+          record(2, [0, 0, 0x50, 1, 2, 3, 4]),
+          record(3, [0, 1, 0x50, 9, 9]),
+          record(3, [0, 2, 0x50, 8]),
+        ],
+        { usedLength: 4 },
+      ),
+    );
+    expect({ status: outcome.status, carry: outcome.carry }).toEqual({
+      status: 7,
+      carry: 1,
+    });
+    expect([...outcome.memory.slice(TARGET, TARGET + 4)]).toEqual([
+      0xcc, 0xcc, 0xcc, 0xcc,
+    ]);
+  });
+
+  it('accepts one patch covered across adjacent IMAGE records', () => {
+    const outcome = run(
+      atomObject([
+        record(2, [0, 0, 0x50, 1]),
+        record(2, [0, 1, 0x50, 2, 3]),
+        record(3, [0, 0, 0x50, 7, 8, 9]),
+      ]),
+    );
+    expect({ status: outcome.status, carry: outcome.carry }).toEqual({
+      status: 0,
+      carry: 0,
+    });
+    expect([...outcome.memory.slice(TARGET, TARGET + 3)]).toEqual([7, 8, 9]);
+  });
+
+  it('accepts an empty Atom image with a retained zero used length', () => {
+    const outcome = run(atomObject([], { usedLength: 0, finalCursor: TARGET }));
+    expect({ status: outcome.status, carry: outcome.carry }).toEqual({
+      status: 0,
+      carry: 0,
     });
     expect([...outcome.memory.slice(TARGET, TARGET + 3)]).toEqual([
       0xcc, 0xcc, 0xcc,
