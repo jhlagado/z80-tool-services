@@ -5,21 +5,25 @@
 ;   ZN_READ   Read the next stored-object byte. Return it in A with carry clear.
 ;             At end of input return A=ZN_EOF with carry set. ZN_EOF is
 ;             reserved exclusively for EOF; other carry-set values are input
-;             failures. IX must be preserved.
+;             failures. IX and IY must be preserved.
 ;   ZN_REW    Rewind the stored object. Return A=0 and carry clear on success.
-;             IX must be preserved.
+;             IX and IY must be preserved.
 ;   ZN_PROF   Validate the selected BEGIN, IMAGE/PATCH and MAP profile after
 ;             the common envelope has passed. IX addresses the state block.
-;             It may rewind and read the object. Carry reports failure.
+;             It may rewind and read the object. Carry reports failure. IX and
+;             IY must be preserved.
 ;   ZN_INIT   Initialize the validated target's used extents with its fill byte.
 ;             IX addresses the profile state. Carry reports a target failure.
+;             IX and IY must be preserved.
 ;   ZN_STORE  Store one final byte. A is the byte, B the bank and DE the target
-;             address. IX must be preserved. The sink must be infallible for a
-;             profile-validated target, or write into tentative storage.
+;             address. IX and IY must be preserved. The sink must be infallible
+;             for a profile-validated target, or write into tentative storage.
 ;
 ; ZN_MAT validates the complete envelope, invokes ZN_PROF, initializes the
 ; target, rewinds, and only then applies IMAGE and PATCH bytes. It performs no
 ; symbol resolution: PATCH payloads already contain final bytes.
+; The stored object must remain readable and byte-for-byte unchanged, and must
+; not alias any target write, until ZN_MAT returns.
 ;
 ; IX points at a caller-owned ZN_SIZE-byte state block. The caller initializes
 ; ZN_MAJOR, ZN_MINOR and ZN_FLAGS. Bit 0 of ZN_FLAGS requires an IMAGE record.

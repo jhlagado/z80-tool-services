@@ -279,10 +279,8 @@ describe('native NOBJ consumer', () => {
     expect(word(outcome.memory, harness.symbols.CURSOR)).toBeGreaterThan(
       harness.symbols.INPUT,
     );
-    expect(harness.symbols.ZN_END - harness.symbols.ZN_VALID).toBeLessThan(
-      1024,
-    );
-    expect(harness.symbols.ZA_END - harness.symbols.ZN_PROF).toBeLessThan(2048);
+    expect(harness.symbols.ZN_END - harness.symbols.ZN_VALID).toBe(755);
+    expect(harness.symbols.ZA_END - harness.symbols.ZN_PROF).toBe(1147);
   });
 
   it('rejects a bad CRC before changing target memory', () => {

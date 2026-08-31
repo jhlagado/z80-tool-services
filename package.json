@@ -22,6 +22,7 @@
     "./native/cpm22-final-image.asm": "./native/cpm22-final-image.asm",
     "./native/nobj-consumer.asm": "./native/nobj-consumer.asm",
     "./native/atom-flat-nobj.asm": "./native/atom-flat-nobj.asm",
+    "./native/nucleus-nobj.asm": "./native/nucleus-nobj.asm",
     "./package.json": "./package.json"
   },
   "files": [

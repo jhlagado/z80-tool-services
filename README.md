@@ -50,11 +50,25 @@ The selected target memory must not overlap that state block.
 flat bank-zero BEGIN and MAP fields, image bounds and monotonicity, used and
 final extents, entry address, source-part banks, PATCH coverage, and PATCH
 non-overlap. It uses a 49-byte state block and rejects a target capacity that
-overlaps it. PATCH verification repeats
-sequential scans instead of retaining an address bitmap or interval list, so
-its RAM cost does not grow with the object.
+overlaps it. PATCH verification repeats sequential scans instead of retaining
+an address bitmap or interval list, so its RAM cost does not grow with the
+object.
 
-The input must remain unchanged and readable for both passes. A direct-memory
+`native/nucleus-nobj.asm` supplies the Nucleus 0.1 profile hook. It accepts flat
+loaded images and banked ROM images, validates the complete MAP relationship,
+checks IMAGE order separately in every bank, proves PATCH non-overlap, and
+initializes each bank through the caller's target-store routine. Its 94-byte
+state block has constant size from one through 255 banks. The validator trades
+execution time for RAM by rescanning the immutable object for each bank and
+patch. Pairwise PATCH checking is quadratic in the number of patches; the
+profile adds no lower record limit, so a native platform may publish and
+diagnose its own execution-time limit. The measured native code is 755 bytes
+for the common consumer and 2,270 bytes for the Nucleus profile, with 94 bytes
+of caller-owned state.
+
+From the first read until `ZN_MAT` returns, the input must remain readable and
+byte-for-byte unchanged, and no target write may alias it. The read, rewind,
+profile, initialization, and store callbacks preserve IX and IY. A direct-memory
 store routine must be infallible after profile validation. A fallible target
 uses tentative storage and publishes it only after `ZN_MAT` succeeds. File
 opening, naming, closing, replacement, and rollback belong to the platform
