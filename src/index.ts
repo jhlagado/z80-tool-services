@@ -12,3 +12,4 @@ export * from './runtime-stream-io.js';
 export * from './runtime-streams.js';
 export * from './source.js';
 export * from './target-image.js';
+export * from './nobj-framing.js';

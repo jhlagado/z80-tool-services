@@ -22,11 +22,13 @@ or failure in a register, byte console dispatch helpers for input, output, and
 terminal status, plus conformance vectors for direct-host gateways built on
 those shapes.
 
-The package also owns finalized target-image materialization. Atom and Nucleus
-keep their own NOBJ parsers because their MAP records describe different
-language products. Each parser converts its validated IMAGE, PATCH, geometry,
-and used-length records to `materializeTargetImage`. The result contains one
-capacity-sized RAM image per bank and the exact used length of each bank.
+The package also owns common NOBJ framing and finalized target-image
+materialization. `decodeNobjEnvelope` validates record lengths, phase order,
+version selection, the terminal record count, and CRC-16/CCITT-FALSE. Atom and
+Nucleus then validate their different BEGIN and MAP profiles before converting
+the IMAGE, PATCH, geometry, and used-length records to `materializeTargetImage`.
+The result contains one capacity-sized RAM image per bank and the exact used
+length of each bank.
 `renderTargetBinary`, `renderTargetCpmCom`, and `renderTargetIntelHex` then
 produce final files from that common result. A COM file is a headerless binary
 whose load and entry address must both be `$0100`.
@@ -85,6 +87,7 @@ The package exports:
   committed-generation storage;
 - shared finalized-image validation and materialization, including flat and
   banked images, profile-selected PATCH rules, and fill bytes;
+- shared NOBJ record framing, phase, version, commit-count, and CRC validation;
 - BIN, CP/M COM, and Intel HEX rendering from a materialized image;
 - one-byte service status normalization and thrown-operation capture;
 - byte console dispatch helpers for input, output, terminal success, and
