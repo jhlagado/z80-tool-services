@@ -31,6 +31,10 @@ capacity-sized RAM image per bank and the exact used length of each bank.
 produce final files from that common result. A COM file is a headerless binary
 whose load and entry address must both be `$0100`.
 
+Native CP/M tools can include `native/cpm22-final-image.asm` to render one or
+more finalized memory segments as Intel HEX through ordinary BDOS sequential
+writes. File creation and transactional rename remain the caller's job.
+
 The main package also defines the shared assembler-flavour names used by Node
 tools that accept ordinary `.asm` files. Callers choose `atom`, `azm`, or
 `auto`; filenames do not select a dialect by themselves. Neutral tools should
