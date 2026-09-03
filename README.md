@@ -78,6 +78,12 @@ diagnose its own execution-time limit. The measured native code is 755 bytes
 for the common consumer and 2,270 bytes for the Nucleus profile, with 94 bytes
 of caller-owned state.
 
+This native Nucleus profile supports the legacy non-overlapping PATCH subset.
+The current Nucleus host format also permits overlapping PATCH records, with
+the last serialized write winning. The native profile still rejects those
+objects; it is not a complete loader for every object accepted by the current
+host parser. Tests exercise that difference explicitly.
+
 From the first read until `ZN_MAT` returns, the input must remain readable and
 byte-for-byte unchanged, and no target write may alias it. The read, rewind,
 profile, initialization, and store callbacks preserve IX and IY. A direct-memory

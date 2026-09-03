@@ -7,7 +7,7 @@ import { createZ80Runtime } from '@jhlagado/debug80-runtime';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { nobjCrc16CcittFalse } from '../src/nobj-framing.js';
-import { parseNobj } from '../../nucleus/src/nobj.js';
+import { parseNobj } from '@jhlagado/nucleus/nobj';
 
 const LOAD = 0x0100;
 const TARGET = 0x5000;
@@ -479,7 +479,7 @@ describe('native Nucleus NOBJ consumer', () => {
     [TARGET + 1, [3], TARGET, [4, 5]],
     [TARGET, [4, 5], TARGET + 1, [3]],
   ] as const)(
-    'rejects overlapping PATCH records in either address order',
+    'retains legacy native PATCH non-overlap in both orders while the current host accepts overlap',
     (firstAddress, firstBytes, secondAddress, secondBytes) => {
       const object = nucleusObject({
         records: [
@@ -490,7 +490,7 @@ describe('native Nucleus NOBJ consumer', () => {
         ],
         map: bankedMap(),
       });
-      expect(() => parseNobj(object)).toThrow();
+      expect(() => parseNobj(object)).not.toThrow();
       const outcome = run(object);
       expect({ status: outcome.status, carry: outcome.carry }).toEqual({
         status: 7,
@@ -647,7 +647,8 @@ describe('native Nucleus NOBJ consumer', () => {
       carry: 0,
     });
     expect(outcome.steps).toBeLessThan(50_000_000);
-  });
+    // Keep the emulated instruction bound independent of host/CI CPU speed.
+  }, 30_000);
 
   it('rejects a MAP used extent that differs from record high water', () => {
     const map = bankedMap();
