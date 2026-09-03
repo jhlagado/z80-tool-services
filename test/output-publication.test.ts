@@ -34,10 +34,15 @@ describe('positive output publication', () => {
         },
       };
 
-      await expect(publishOutputFiles([
-        { path: binary, bytes: Uint8Array.of(2) },
-        { path: listing, bytes: 'second\n' },
-      ], { filesystem: injected })).rejects.toMatchObject({
+      await expect(
+        publishOutputFiles(
+          [
+            { path: binary, bytes: Uint8Array.of(2) },
+            { path: listing, bytes: 'second\n' },
+          ],
+          { filesystem: injected },
+        ),
+      ).rejects.toMatchObject({
         code: 'output-transaction',
       });
       expect(await readFile(binary)).toEqual(Buffer.from([1]));
@@ -51,10 +56,12 @@ describe('positive output publication', () => {
     await expect(publishOutputFiles([])).rejects.toBeInstanceOf(
       OutputPublicationError,
     );
-    await expect(publishOutputFiles([
-      { path: 'build/program.bin', bytes: Uint8Array.of(1) },
-      { path: 'build/program.bin', bytes: Uint8Array.of(2) },
-    ])).rejects.toMatchObject({ code: 'duplicate-output' });
+    await expect(
+      publishOutputFiles([
+        { path: 'build/program.bin', bytes: Uint8Array.of(1) },
+        { path: 'build/program.bin', bytes: Uint8Array.of(2) },
+      ]),
+    ).rejects.toMatchObject({ code: 'duplicate-output' });
   });
 });
 
@@ -98,17 +105,19 @@ describe('content-addressed artifact generation publication', () => {
           return fs.rename(source, target);
         },
       };
-      await expect(publishArtifactGeneration(
-        destination,
-        [{ name: 'program.bin', bytes: Uint8Array.of(2) }],
-        { filesystem: injected, tagPrefix: 'test' },
-      )).rejects.toMatchObject({ code: 'generation-publish' });
+      await expect(
+        publishArtifactGeneration(
+          destination,
+          [{ name: 'program.bin', bytes: Uint8Array.of(2) }],
+          { filesystem: injected, tagPrefix: 'test' },
+        ),
+      ).rejects.toMatchObject({ code: 'generation-publish' });
       expect(await readFile(path.join(first.current, 'program.bin'))).toEqual(
         Buffer.from([1]),
       );
       expect(
         (await fs.readdir(destination)).filter((name) =>
-          name.startsWith('.current-')
+          name.startsWith('.current-'),
         ),
       ).toEqual([]);
     } finally {
@@ -117,7 +126,9 @@ describe('content-addressed artifact generation publication', () => {
   });
 
   it('rejects conflicting existing generations and duplicate artifact names', async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), 'z80-generation-conflict-'));
+    const directory = await mkdtemp(
+      path.join(tmpdir(), 'z80-generation-conflict-'),
+    );
     try {
       const destination = path.join(directory, 'program.tool');
       const published = await publishArtifactGeneration(destination, [
@@ -127,14 +138,18 @@ describe('content-addressed artifact generation publication', () => {
         path.join(published.generationDirectory, 'program.bin'),
         Buffer.from([9]),
       );
-      await expect(publishArtifactGeneration(destination, [
-        { name: 'program.bin', bytes: Uint8Array.of(1) },
-      ])).rejects.toMatchObject({ code: 'generation-conflict' });
+      await expect(
+        publishArtifactGeneration(destination, [
+          { name: 'program.bin', bytes: Uint8Array.of(1) },
+        ]),
+      ).rejects.toMatchObject({ code: 'generation-conflict' });
 
-      await expect(publishArtifactGeneration(destination, [
-        { name: 'program.bin', bytes: Uint8Array.of(1) },
-        { name: 'program.bin', bytes: Uint8Array.of(2) },
-      ])).rejects.toMatchObject({ code: 'duplicate-output' });
+      await expect(
+        publishArtifactGeneration(destination, [
+          { name: 'program.bin', bytes: Uint8Array.of(1) },
+          { name: 'program.bin', bytes: Uint8Array.of(2) },
+        ]),
+      ).rejects.toMatchObject({ code: 'duplicate-output' });
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

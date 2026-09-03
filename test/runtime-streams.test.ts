@@ -121,9 +121,7 @@ describe('runtime byte-stream services', () => {
       runtimeStreamIoOperationName(RUNTIME_STREAM_IO_OPERATION.readInputByte),
     ).toBe(RUNTIME_STREAM_SERVICE.readInputByte);
     expect(
-      runtimeStreamIoOperationName(
-        RUNTIME_STREAM_IO_OPERATION.writeOutputByte,
-      ),
+      runtimeStreamIoOperationName(RUNTIME_STREAM_IO_OPERATION.writeOutputByte),
     ).toBe(RUNTIME_STREAM_SERVICE.writeOutputByte);
     expect(runtimeStreamIoOperationName(0xff)).toBeUndefined();
   });
@@ -157,9 +155,7 @@ describe('runtime byte-stream services', () => {
       ...createRuntimeStreamIoStubBytes(
         RUNTIME_STREAM_IO_OPERATION.rewindStorageInput,
       ),
-    ]).toEqual([
-      0x3e, 0x03, 0xd3, 0xe0, 0xdb, 0xe2, 0xb7, 0xc8, 0x37, 0xc9,
-    ]);
+    ]).toEqual([0x3e, 0x03, 0xd3, 0xe0, 0xdb, 0xe2, 0xb7, 0xc8, 0x37, 0xc9]);
     expect([
       ...createRuntimeStreamIoStubBytes(
         RUNTIME_STREAM_IO_OPERATION.writeStorageByte,

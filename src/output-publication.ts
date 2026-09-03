@@ -68,10 +68,7 @@ export interface PublishArtifactGenerationOptions {
     generation: string,
     artifacts: readonly ArtifactGenerationSummary[],
   ) => ArtifactGenerationManifest;
-  readonly verifyManifest?: (
-    generation: string,
-    manifest: unknown,
-  ) => boolean;
+  readonly verifyManifest?: (generation: string, manifest: unknown) => boolean;
 }
 
 export interface PublishedArtifactGeneration {
@@ -271,7 +268,7 @@ const verifyArtifactGeneration = async (
     if (manifestFile !== undefined) {
       const manifestPath = path.join(generationDirectory, manifestFile.name);
       const manifest = JSON.parse(
-        await filesystem.readFile(manifestPath, 'utf8') as string,
+        (await filesystem.readFile(manifestPath, 'utf8')) as string,
       ) as unknown;
       if (verifyManifest !== undefined && !verifyManifest(digest, manifest)) {
         throw new OutputPublicationError(
@@ -328,11 +325,13 @@ export async function publishArtifactGeneration(
   }
 
   const digest = generationDigest(materialized);
-  const summaries = materialized.map((file) => Object.freeze({
-    name: file.name,
-    bytes: file.bytes.length,
-    sha256: createHash('sha256').update(file.bytes).digest('hex'),
-  }));
+  const summaries = materialized.map((file) =>
+    Object.freeze({
+      name: file.name,
+      bytes: file.bytes.length,
+      sha256: createHash('sha256').update(file.bytes).digest('hex'),
+    }),
+  );
   const manifestFile = manifest?.(digest, summaries);
   if (manifestFile !== undefined) {
     validateArtifactName(manifestFile.name);
@@ -368,7 +367,10 @@ export async function publishArtifactGeneration(
       await filesystem.mkdir(temporary);
       ownsTemporary = true;
       for (const file of materialized) {
-        const handle = await filesystem.open(path.join(temporary, file.name), 'wx');
+        const handle = await filesystem.open(
+          path.join(temporary, file.name),
+          'wx',
+        );
         try {
           await handle.writeFile(file.bytes);
           await handle.sync();
@@ -464,10 +466,14 @@ export async function publishArtifactGeneration(
     generationDirectory,
     current,
     paths: new Map([
-      ...materialized.map((file) => [file.name, path.join(current, file.name)] as const),
+      ...materialized.map(
+        (file) => [file.name, path.join(current, file.name)] as const,
+      ),
       ...(manifestFile === undefined
         ? []
-        : [[manifestFile.name, path.join(current, manifestFile.name)] as const]),
+        : [
+            [manifestFile.name, path.join(current, manifestFile.name)] as const,
+          ]),
     ]),
   });
 }

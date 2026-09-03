@@ -5,6 +5,18 @@ used by Z80-hosted development tools. Version 1 provides named binary objects,
 bounded synchronous transfers, opaque handles, 32-bit seek offsets, and
 transactional publication.
 
+This is the independently versioned authority for those contracts. It builds
+and tests without a Debug80 checkout; Debug80, Atom, and Nucleus are consumers.
+
+```sh
+npm install
+npm run check
+```
+
+The repository retains the package's path history through Debug80 commit
+`6c8d0f19b5fb12137bb399db45f7a7c9e74e7012` and subtree split
+`c714d483f2d918652de2e1844ba2104124e82212`.
+
 The `source-preparation` subpath provides the Node-hosted project layer shared
 by streaming Z80 tools: confined source reads, stable physical and logical
 identities, deterministic dependency ordering, cycle detection, path-keyed

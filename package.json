@@ -37,12 +37,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jhlagado/debug80.git",
-    "directory": "packages/z80-tool-services"
+    "url": "git+https://github.com/jhlagado/z80-tool-services.git"
   },
   "bugs": {
-    "url": "https://github.com/jhlagado/debug80/issues"
+    "url": "https://github.com/jhlagado/z80-tool-services/issues"
   },
+  "homepage": "https://github.com/jhlagado/z80-tool-services#readme",
   "scripts": {
     "clean": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
     "build": "npm run clean && tsc -p tsconfig.json && node scripts/generate-native-abi.mjs",
@@ -51,15 +51,16 @@
     "lint": "eslint src test --ext .ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.md\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.md\"",
-    "pretest": "npm run build -w @jhlagado/azm && npm run build -w @jhlagado/debug80-runtime && npm run build",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run test:package",
+    "pretest": "npm run build",
     "test": "vitest run",
-    "test:package": "node scripts/smoke-package.mjs",
+    "test:package": "npm run build && node scripts/smoke-package.mjs",
     "prepack": "npm run build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run check"
   },
   "devDependencies": {
-    "@jhlagado/azm": "0.3.9",
-    "@jhlagado/debug80-runtime": "0.1.0",
+    "@jhlagado/azm": "^0.3.9",
+    "@jhlagado/debug80-runtime": "^0.2.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",

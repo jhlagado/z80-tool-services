@@ -65,17 +65,21 @@ describe('positive output selection', () => {
   });
 
   it('splits the common positive-output CLI shape', () => {
-    expect(splitPositiveOutputArguments({
-      positionals: ['src/main.asm', 'build/main.bin', 'build/main.hex'],
-    })).toEqual({
+    expect(
+      splitPositiveOutputArguments({
+        positionals: ['src/main.asm', 'build/main.bin', 'build/main.hex'],
+      }),
+    ).toEqual({
       input: 'src/main.asm',
       outputPaths: ['build/main.bin', 'build/main.hex'],
       output: 'build/main.bin',
     });
-    expect(splitPositiveOutputArguments({
-      positionals: ['src/main.asm', 'build/main.hex'],
-      optionOutputs: ['build/main.bin'],
-    })).toEqual({
+    expect(
+      splitPositiveOutputArguments({
+        positionals: ['src/main.asm', 'build/main.hex'],
+        optionOutputs: ['build/main.bin'],
+      }),
+    ).toEqual({
       input: 'src/main.asm',
       outputPaths: ['build/main.bin', 'build/main.hex'],
       output: 'build/main.bin',

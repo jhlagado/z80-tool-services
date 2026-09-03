@@ -66,11 +66,15 @@ export interface SelectConcreteZ80AssemblerFlavourOptions {
 }
 
 export type Z80AssemblerFlavourHandlers<Result> = Readonly<
-  Record<ConcreteZ80AssemblerFlavour, (flavour: ConcreteZ80AssemblerFlavour) => Result>
+  Record<
+    ConcreteZ80AssemblerFlavour,
+    (flavour: ConcreteZ80AssemblerFlavour) => Result
+  >
 >;
 
-export interface DispatchZ80AssemblerFlavourOptions<Result>
-  extends SelectConcreteZ80AssemblerFlavourOptions {
+export interface DispatchZ80AssemblerFlavourOptions<
+  Result,
+> extends SelectConcreteZ80AssemblerFlavourOptions {
   readonly handlers: Z80AssemblerFlavourHandlers<Result>;
 }
 
