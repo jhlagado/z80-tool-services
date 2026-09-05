@@ -45,7 +45,7 @@ try {
   assert.equal(packed.status, 0, packed.stderr);
   const [census] = JSON.parse(packed.stdout);
   assert.equal(census.name, '@jhlagado/z80-tool-services');
-  assert.equal(census.version, '0.1.0');
+  assert.equal(census.version, '0.2.0');
   assert.ok(census.files.some(({ path }) => path === 'dist/index.js'));
   assert.ok(
     census.files.some(({ path }) => path === 'source-preparation/index.mjs'),
@@ -58,6 +58,14 @@ try {
       ({ path }) => path === 'native/z80-tool-services-v1.asmi',
     ),
   );
+  for (const filename of [
+    'nobj-consumer.asm',
+    'atom-flat-nobj.asm',
+    'nucleus-nobj.asm',
+    'ATOM-MIGRATION.md',
+  ]) {
+    assert.ok(census.files.some(({ path }) => path === `native/${filename}`));
+  }
   assert.equal(
     census.files.some(({ path }) => /^atom(?:\/|$)/i.test(path)),
     false,

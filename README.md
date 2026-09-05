@@ -58,6 +58,13 @@ PATCH bytes. The caller supplies byte-read, rewind, profile-validation,
 target-initialization, and target-store routines plus a 20-byte state block.
 The selected target memory must not overlap that state block.
 
+The NOBJ consumer and both profile sources use canonical ATOM syntax and
+eight-character symbols. Their proofs assemble those files directly with
+ATOM, without source translation. Callback entry names, status values, state
+offsets, instruction order, and the native PATCH subset are unchanged. The
+source-level constant renames are listed in
+[the native ATOM migration notes](native/ATOM-MIGRATION.md).
+
 `native/atom-flat-nobj.asm` supplies the Atom 0.2 profile hook. It validates the
 flat bank-zero BEGIN and MAP fields, image bounds and monotonicity, used and
 final extents, entry address, source-part banks, PATCH coverage, and PATCH
