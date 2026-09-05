@@ -1,8 +1,6 @@
-import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 
-import { compile } from '@jhlagado/azm';
+import { assembleNativeHarness } from './native-atom-harness.js';
 import { createZ80Runtime } from '@jhlagado/debug80-runtime';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -184,7 +182,7 @@ ${consumer}
 
 ${profile}
 
-VALIDATE_ONLY:
+VALIDATE:
 CALL ZN_VALID
 RET  C
 JP   ZN_PROF
@@ -230,9 +228,9 @@ RET
 ;@ROUTINE IN A,B,DE OUT A,CARRY CLOBBERS BC,DE,HL,ZERO,SIGN,PARITY,HALFCARRY
 ZN_STORE:
 PUSH AF
-LD   A,(STORE_FAIL)
+LD   A,(ST_FAIL)
 OR   A
-JR   NZ,STORE_BAD
+JR   NZ,ST_BAD
 LD   A,D
 ADD  A,B
 LD   D,A
@@ -243,7 +241,7 @@ LD   DE,$D4E4
 LD   HL,$A4A4
 OR   A
 RET
-STORE_BAD:
+ST_BAD:
 POP  AF
 LD   BC,$B5C5
 LD   DE,$D5E5
@@ -254,9 +252,9 @@ RET
 STATE: DS NN_SIZE
 CURSOR: DW INPUT
 LIMIT: DW INPUT
-STORE_FAIL: DB 0
+ST_FAIL: DB 0
 INPUT: DS 8192
-IMAGE_END:
+IMG_END:
 `;
 
 const buildHarness = async (): Promise<Harness> => {
@@ -264,52 +262,7 @@ const buildHarness = async (): Promise<Harness> => {
     readFile(new URL('../native/nobj-consumer.asm', import.meta.url), 'utf8'),
     readFile(new URL('../native/nucleus-nobj.asm', import.meta.url), 'utf8'),
   ]);
-  const directory = await mkdtemp(join(tmpdir(), 'zts-native-nucleus-'));
-  try {
-    const sourcePath = join(directory, 'proof.asm');
-    const source = harnessSource(consumer, profile)
-      .split(/\r\n|\n|\r/)
-      .map((line) => {
-        const annotation = /^\s*;@(ROUTINE|EXPECTOUT)\b(.*)$/i.exec(line);
-        return annotation === null
-          ? line
-          : `.${annotation[1]?.toLowerCase()}${annotation[2] ?? ''}`;
-      })
-      .join('\n');
-    await writeFile(sourcePath, `${source}\n.end\n`);
-    const result = await compile(sourcePath, {
-      emitBin: true,
-      emitD8m: true,
-      emitHex: false,
-      emitLst: false,
-      registerContracts: 'strict',
-      symbolCase: 'insensitive',
-    });
-    const errors = result.diagnostics.filter(
-      ({ severity }) => severity === 'error',
-    );
-    if (errors.length !== 0) {
-      throw new Error(
-        errors
-          .map(({ line, column, message }) => `${line}:${column}: ${message}`)
-          .join('\n'),
-      );
-    }
-    const binary = result.artifacts.find(({ kind }) => kind === 'bin');
-    const debugMap = result.artifacts.find(({ kind }) => kind === 'd8m');
-    if (binary?.kind !== 'bin' || debugMap?.kind !== 'd8m') {
-      throw new Error('native Nucleus proof artifacts are missing');
-    }
-    const symbols = Object.fromEntries(
-      debugMap.json.symbols.flatMap((symbol) => {
-        const value = symbol.address ?? symbol.value;
-        return value === undefined ? [] : [[symbol.name.toUpperCase(), value]];
-      }),
-    );
-    return { bytes: binary.bytes, symbols };
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
+  return assembleNativeHarness(harnessSource(consumer, profile), LOAD);
 };
 
 let harness: Harness;
@@ -335,7 +288,7 @@ const run = (
     readonly storeFailure?: boolean;
     readonly stateAddress?: number;
     readonly stackAddress?: number;
-    readonly entry?: 'ZN_MAT' | 'VALIDATE_ONLY';
+    readonly entry?: 'ZN_MAT' | 'VALIDATE';
     readonly maxSteps?: number;
   } = {},
 ): Readonly<{
@@ -355,7 +308,7 @@ const run = (
     harness.symbols.INPUT + object.length,
   );
   putWord(memory, harness.symbols.LIMIT, harness.symbols.INPUT + object.length);
-  memory[harness.symbols.STORE_FAIL] = storeFailure ? 1 : 0;
+  memory[harness.symbols.ST_FAIL] = storeFailure ? 1 : 0;
   memory[stateAddress] = 0;
   memory[stateAddress + 1] = 1;
   memory[stateAddress + 2] = 1;
@@ -370,6 +323,9 @@ const run = (
     runtime.step();
   }
   expect(runtime.cpu.pc).toBe(RETURN);
+  expect(runtime.cpu.sp).toBe(stackAddress + 2);
+  expect(runtime.cpu.ix).toBe(stateAddress);
+  expect(runtime.cpu.iy).toBe(INITIAL_IY);
   return {
     status: runtime.cpu.a,
     carry: runtime.cpu.flags.C,
@@ -425,6 +381,27 @@ const resizeRecord = (
 };
 
 describe('native Nucleus NOBJ consumer', () => {
+  it('retains the Nucleus profile state offsets', () => {
+    expect(harness.symbols).toMatchObject({
+      NN_SIZE: 94,
+      NM_ENTBK: 31,
+      NMVECTOR: 41,
+      NMBSSEND: 51,
+      NM_LDBNK: 56,
+      NM_LDLEN: 59,
+      NN_PATS: 62,
+      NN_BANKI: 64,
+      NNROBASE: 67,
+      NNAGBASE: 71,
+      NN_TBANK: 75,
+      NNTMPEND: 78,
+      NN_PATI: 84,
+      NN_ORD: 86,
+      NNPSTART: 89,
+      NNWORDLO: 93,
+    });
+  });
+
   it('validates, fills, and patches a banked Nucleus object', () => {
     const outcome = run(validBankedObject());
     expect({ status: outcome.status, carry: outcome.carry }).toEqual({
@@ -639,7 +616,7 @@ describe('native Nucleus NOBJ consumer', () => {
     });
     expect(() => parseNobj(object)).not.toThrow();
     const outcome = run(object, {
-      entry: 'VALIDATE_ONLY',
+      entry: 'VALIDATE',
       maxSteps: 50_000_000,
     });
     expect({ status: outcome.status, carry: outcome.carry }).toEqual({

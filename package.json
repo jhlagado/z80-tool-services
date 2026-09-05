@@ -1,6 +1,6 @@
 {
   "name": "@jhlagado/z80-tool-services",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared host and named-object services for Z80 development tools",
   "license": "GPL-3.0-or-later",
   "type": "module",
@@ -60,12 +60,12 @@
     "prepublishOnly": "npm run check"
   },
   "devDependencies": {
-    "@jhlagado/azm": "^0.3.9",
     "@jhlagado/debug80-runtime": "git+https://github.com/jhlagado/debug80-runtime.git#b7343aa8c38c248abbc6ee801b4af270d4843ad6",
-    "@jhlagado/nucleus": "git+https://github.com/jhlagado/nucleus.git#a5371541695789cd56586b96dfe421603395a6b7",
+    "@jhlagado/nucleus": "git+https://github.com/jhlagado/nucleus.git#b5276a85fd36600a10dbd65039f0af3afc033f0d",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
+    "atom-z80": "git+https://github.com/jhlagado/atom.git#802b5c2d320bec777f427755ff2d7338e3b80a05",
     "eslint": "^8.55.0",
     "prettier": "^3.1.0",
     "typescript": "5.3.3",

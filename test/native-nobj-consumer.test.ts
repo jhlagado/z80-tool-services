@@ -1,8 +1,6 @@
-import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 
-import { compile } from '@jhlagado/azm';
+import { assembleNativeHarness } from './native-atom-harness.js';
 import { createZ80Runtime } from '@jhlagado/debug80-runtime';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -131,9 +129,9 @@ RET
 ;@ROUTINE IN A,B,DE OUT A,CARRY CLOBBERS BC,DE,HL,ZERO,SIGN,PARITY,HALFCARRY
 ZN_STORE:
 PUSH AF
-LD   A,(STORE_FAIL)
+LD   A,(ST_FAIL)
 OR   A
-JR   NZ,STORE_BAD
+JR   NZ,ST_BAD
 POP  AF
 LD   (DE),A
 LD   BC,$B4C4
@@ -141,7 +139,7 @@ LD   DE,$D4E4
 LD   HL,$A4A4
 OR   A
 RET
-STORE_BAD:
+ST_BAD:
 POP  AF
 LD   BC,$B5C5
 LD   DE,$D5E5
@@ -152,9 +150,9 @@ RET
 STATE: DS ZA_SIZE
 CURSOR: DW INPUT
 LIMIT: DW INPUT
-STORE_FAIL: DB 0
+ST_FAIL: DB 0
 INPUT: DS 512
-IMAGE_END:
+IMG_END:
 `;
 
 const buildHarness = async (): Promise<Harness> => {
@@ -162,52 +160,7 @@ const buildHarness = async (): Promise<Harness> => {
     readFile(new URL('../native/nobj-consumer.asm', import.meta.url), 'utf8'),
     readFile(new URL('../native/atom-flat-nobj.asm', import.meta.url), 'utf8'),
   ]);
-  const directory = await mkdtemp(join(tmpdir(), 'zts-native-nobj-'));
-  try {
-    const sourcePath = join(directory, 'proof.asm');
-    const source = harnessSource(consumer, atomProfile)
-      .split(/\r\n|\n|\r/)
-      .map((line) => {
-        const annotation = /^\s*;@(ROUTINE|EXPECTOUT)\b(.*)$/i.exec(line);
-        return annotation === null
-          ? line
-          : `.${annotation[1]?.toLowerCase()}${annotation[2] ?? ''}`;
-      })
-      .join('\n');
-    await writeFile(sourcePath, `${source}\n.end\n`);
-    const result = await compile(sourcePath, {
-      emitBin: true,
-      emitD8m: true,
-      emitHex: false,
-      emitLst: false,
-      registerContracts: 'strict',
-      symbolCase: 'insensitive',
-    });
-    const errors = result.diagnostics.filter(
-      ({ severity }) => severity === 'error',
-    );
-    if (errors.length !== 0) {
-      throw new Error(
-        errors
-          .map(({ line, column, message }) => `${line}:${column}: ${message}`)
-          .join('\n'),
-      );
-    }
-    const binary = result.artifacts.find(({ kind }) => kind === 'bin');
-    const debugMap = result.artifacts.find(({ kind }) => kind === 'd8m');
-    if (binary?.kind !== 'bin' || debugMap?.kind !== 'd8m') {
-      throw new Error('native NOBJ proof artifacts are missing');
-    }
-    const symbols = Object.fromEntries(
-      debugMap.json.symbols.flatMap((symbol) => {
-        const value = symbol.address ?? symbol.value;
-        return value === undefined ? [] : [[symbol.name.toUpperCase(), value]];
-      }),
-    );
-    return { bytes: binary.bytes, symbols };
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
+  return assembleNativeHarness(harnessSource(consumer, atomProfile), LOAD);
 };
 
 let harness: Harness;
@@ -231,7 +184,7 @@ const run = (
     harness.symbols.INPUT + object.length,
   );
   putWord(memory, harness.symbols.LIMIT, harness.symbols.INPUT + object.length);
-  memory[harness.symbols.STORE_FAIL] = options.storeFailure === true ? 1 : 0;
+  memory[harness.symbols.ST_FAIL] = options.storeFailure === true ? 1 : 0;
   const state = options.stateAddress ?? harness.symbols.STATE;
   memory[state] = 0;
   memory[state + 1] = 2;
@@ -240,6 +193,7 @@ const run = (
 
   const runtime = createZ80Runtime({ memory, startAddress: LOAD }, LOAD);
   runtime.cpu.ix = state;
+  runtime.cpu.iy = 0xcafe;
   runtime.cpu.sp = STACK;
   runtime.cpu.pc = harness.symbols.ZN_MAT;
   for (
@@ -250,6 +204,9 @@ const run = (
     runtime.step();
   }
   expect(runtime.cpu.pc).toBe(RETURN);
+  expect(runtime.cpu.sp).toBe(STACK + 2);
+  expect(runtime.cpu.ix).toBe(state);
+  expect(runtime.cpu.iy).toBe(0xcafe);
   return {
     status: runtime.cpu.a,
     carry: runtime.cpu.flags.C,
@@ -258,6 +215,23 @@ const run = (
 };
 
 describe('native NOBJ consumer', () => {
+  it('retains the common ABI and Atom profile state offsets', () => {
+    expect(harness.symbols).toMatchObject({
+      ZN_SIZE: 20,
+      ZNADDRLO: 13,
+      ZNADDRHI: 14,
+      ZNENTBNK: 17,
+      ZN_PROFL: 7,
+      ZNSTOREE: 8,
+      ZNCOMMIT: 5,
+      ZA_SIZE: 49,
+      ZAPCOUNT: 30,
+      ZAPSTART: 34,
+      ZATMPEND: 42,
+      ZAWORDLO: 44,
+    });
+  });
+
   it('validates, rewinds, applies IMAGE, and then applies PATCH', () => {
     const outcome = run(validObject());
     expect(
