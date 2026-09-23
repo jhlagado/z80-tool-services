@@ -1,6 +1,7 @@
 # Stage 2: Nucleus–ATOM reconciliation plan
 
-**Status:** in progress; host seam landed, source/artifact reconciliation still pending
+**Status:** in progress; host seam and first source/integration probe landed,
+source/artifact reconciliation still pending
 
 **Scope:** reconcile the active Nucleus `compiler-rewrite-12k` line with the
 qualified ATOM-native line `atom-source-native`/`nucleus-v0.3.1`. The target
@@ -40,6 +41,11 @@ same eight-character-symbol limit. These failures are useful evidence:
 reconciliation needs an include-flattening/source-preparation pass and an
 explicit stable symbol map, not a global search-and-replace or a package
 rename. No converted file was written to the user's Nucleus checkout.
+
+The exact revisions, commands, refusal messages and isolated branch-merge
+result are recorded in the [2026-09-24 probe report](stage-2-nucleus-atom-probe-2026-09-24.md).
+The probe confirms that the next work is a selective source port, not a
+wholesale branch merge.
 
 ## Host seam delivered
 
