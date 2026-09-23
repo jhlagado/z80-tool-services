@@ -131,6 +131,26 @@ bytes), MON3 empty source with identical output, direct initialized data
 source (13,879 instructions, 159,995 T-states, 1,568 bytes). All four
 completed successfully.
 
+## Triptych native guest parity checkpoint
+
+The macOS-native target is now qualified at the guest boundary, independently
+of the compiler-host adapter. `npm run proof:cpm-host-parity` passed on
+2026-09-24 at Triptych `5ee04a4`. It built the pinned CP/M distribution, ran
+the real `ATOM.COM`, `EDIT.COM`, `NUC.COM` and a generated Nucleus program in
+both the WASM machine and the Rust native host, and compared raw console
+transcripts, terminal snapshots, exported files and complete working-disk
+digests across fresh-process reopen. The two sessions covered the Atom/Edit/
+compile/run flow and reopening the saved source before running the compiled
+program. The native run therefore proves the macOS target can execute the
+released Nucleus guest artefact; it does not claim that the Nucleus compiler
+itself is hosted by Rust yet.
+
+The current proof records the exact distribution inputs: ATOM revision
+`802b5c2`, Nucleus resident revision `b5276a85`, Triptych revision `5ee04a4`,
+and identical final disk digest `e8528fbe2a63a7c82e8214e0cb5d8698aba9f8c346e0521f91b011cd9f0d8d02`
+for both hosts. This closes the native guest-execution sub-gate while leaving
+the optional native compiler-host binding as a separate future step.
+
 ## Boundaries
 
 - ATOM is the production assembler and the only assembler used for new source
