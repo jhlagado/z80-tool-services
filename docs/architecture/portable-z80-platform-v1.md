@@ -364,7 +364,8 @@ failure cases pass on the intended native and WASM profiles.
 
 ### Stage 5: Skate separation
 
-**Progress:** the provider-boundary predicate is qualified; see
+**Progress:** the provider-boundary predicate and the first generated-program
+native/WASM host predicate are qualified; see
 [`stage-5-skate-effects-2026-09-24.md`](../reports/stage-5-skate-effects-2026-09-24.md).
 
 Separate Skate compiler source/output transport from generated-program runtime
@@ -386,6 +387,12 @@ program operations. Add a non-CP/M provider before claiming portability.
 Use one Rust CPU core for native macOS/Linux and WASM. ESP32-S3 build, boot and
 physical timing are explicitly deferred and do not block this roadmap. Host
 simulation and browser proof do not count as hardware measurements.
+
+**Progress:** the first generated Skate COM now runs through both the native
+Rust execution host and the built WASM binding using the same patchable byte
+gateway and exact output trace. The retained fixture and source provenance are
+in Triptych; broader Atom, Nucleus, Edit and CP/M guest parity remains the
+completion gate.
 
 **Gate:** native/WASM guest parity and hosted release verification pass. No
 ESP32 build or hardware evidence is required for this project; any later ESP32
