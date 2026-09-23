@@ -411,6 +411,12 @@ It confirms that Triptych's production native/WASM path is already free of
 Debug80 Runtime, while Atom and Nucleus still use it behind replaceable
 reference adapters and Debug80 itself remains a direct product consumer.
 
+The Atom-first replacement seam now has an opt-in Triptych WASM proof; see
+[`stage-7-atom-triptych-wasm-2026-09-24.md`](../reports/stage-7-atom-triptych-wasm-2026-09-24.md).
+It compares the existing Atom runner's generated image and service trace with
+the Debug80 reference. The native bare-host adapter is still a separate gate;
+the existing ATOM.COM native/WASM CP/M proof does not substitute for it.
+
 Keep the Runtime optional rather than removing it. Build and qualify an
 Atom-first native/WASM replacement against the existing execution seam, then
 repeat the audit for Nucleus and the remaining test-only consumers. Remove it
