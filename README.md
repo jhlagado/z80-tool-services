@@ -6,7 +6,19 @@ bounded synchronous transfers, opaque handles, 32-bit seek offsets, and
 transactional publication.
 
 This is the independently versioned authority for those contracts. It builds
-and tests without a Debug80 checkout; Debug80, Atom, and Nucleus are consumers.
+and tests without a Debug80 checkout; Debug80, Atom, Nucleus, and Skate use
+parts of its service surface.
+The [platform integration plan](docs/platform-integration.md) records how
+ATOM, Nucleus and Skate adopt shared services without sharing a resident ABI
+or a release schedule.
+
+The [portable Z80 platform architecture](docs/architecture/portable-z80-platform-v1.md)
+defines the ownership boundaries and staged migration. The current evidence is
+recorded in the [Stage 1 behaviour inventory](docs/reports/stage-1-behaviour-inventory.md);
+the [Stage 2 Nucleus–ATOM reconciliation plan](docs/reports/stage-2-nucleus-atom-reconciliation-plan.md)
+describes the safe integration of the active compiler-rewrite line with the
+qualified ATOM-native release. The current acceptance targets are Triptych's
+macOS-native and WASM hosts; ESP32 is deferred.
 
 ```sh
 npm install
@@ -44,6 +56,24 @@ length of each bank.
 `renderTargetBinary`, `renderTargetCpmCom`, and `renderTargetIntelHex` then
 produce final files from that common result. A COM file is a headerless binary
 whose load and entry address must both be `$0100`.
+
+The NOBJ 1.0 host core adds a strict decoder, canonical writer, section-image
+materializer, and version-specific readers for ATOM 0.2 and Nucleus 0.1. The
+legacy readers keep each old profile's checks, then convert accepted streams
+to NOBJ 1.0 and compare every materialized bank and retained layout field.
+ATOM's final cursor and source-part order remain explicit metadata. Nucleus
+conversion requires the provider's state length when the runtime identity is
+not the canonical 0004 layout. These APIs do not change either producer's
+existing output format.
+
+The NOBJ 1.0 linker accepts committed objects, an explicit target layout, and
+selected runtime providers. It keeps local IDs and contract obligations scoped
+by input object, places fixed and allocated sections deterministically, resolves
+qualified exports and service imports, checks bank visibility and address
+overflow, and returns combined images plus copy/zero initialization plans. It
+does not publish files. Built-in Skate 2.0 and Nucleus 0.1 contract schemas are
+validated by the reader; another required contract needs an exact validator.
+Providers may apply their own rule to repeated object-scoped obligations.
 
 Native CP/M tools can include `native/cpm22-final-image.asm` to render one or
 more finalized memory segments as Intel HEX through ordinary BDOS sequential
@@ -167,6 +197,10 @@ Nucleus. Platform packages implement the same provider contract over Node,
 CP/M BDOS, MON3, or TEC-FS.
 
 The normative request and transaction contract is
-[Z80 Tool Services ABI v1](https://github.com/jhlagado/debug80/blob/main/docs/specifications/z80-tool-services-abi-v1.md).
+[Z80 Tool Services ABI v1](docs/specifications/z80-tool-services-abi-v1.md).
 The shared resolver semantics are specified by the
-[Z80 source preparation contract](https://github.com/jhlagado/debug80/blob/main/docs/specifications/z80-source-preparation.md).
+[Z80 source preparation contract](docs/specifications/z80-source-preparation.md).
+Cross-host execution evidence uses the
+[Z80 portable conformance record](docs/specifications/z80-portable-conformance-v1.md).
+Debug80 retains historical copies for provenance; new consumers must link the
+specifications from this repository.
