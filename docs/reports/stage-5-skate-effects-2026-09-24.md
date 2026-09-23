@@ -15,7 +15,7 @@ a CP/M default adapter but exposes host-patchable byte-gateway vectors.
 | Skate console adapter   | `10d8bb6` (`Adapt Skate console effects to byte gateway`)                      |
 | z80-services projection | `3e7de17` (`Add Skate byte gateway projection`)                                |
 | generated-program proof | Skate `8d90c28` (`Add patchable Skate console vectors`) plus `1e18a7a` fixture |
-| Triptych host proof     | Triptych working tree: `proof:skate-generated`                                 |
+| Triptych host proof     | Triptych `44ba310` (`Fix Skate fixture lint`), `proof:skate-generated`         |
 | effect profile          | Skate external-effects protocol v1; byte-gateway/0 console subset              |
 
 The reproducible checks were:
