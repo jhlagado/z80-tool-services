@@ -57,6 +57,12 @@ length of each bank.
 produce final files from that common result. A COM file is a headerless binary
 whose load and entry address must both be `$0100`.
 
+Portable host evidence can use `validatePortableConformanceRecord` for one
+record and `assertPortableConformanceParity` for a native/WASM (or Node/Deno)
+pair. Parity compares the logical source, generated artifact, diagnostics and
+public stop status; provider-owned counters and substrate observations remain
+available in each record but are not required to be identical.
+
 The NOBJ 1.0 host core adds a strict decoder, canonical writer, section-image
 materializer, and version-specific readers for ATOM 0.2 and Nucleus 0.1. The
 legacy readers keep each old profile's checks, then convert accepted streams

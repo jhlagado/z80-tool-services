@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   PORTABLE_CONFORMANCE_SCHEMA,
   PortableConformanceError,
+  PortableConformanceParityError,
+  assertPortableConformanceParity,
   validatePortableConformanceRecord,
 } from '../src/index.js';
 
@@ -112,5 +114,71 @@ describe('portable conformance record', () => {
     expect(() => validatePortableConformanceRecord(value)).toThrow(
       'provenance.compatibleHosts',
     );
+  });
+
+  it('accepts parity records while ignoring host-owned observations', () => {
+    const wasm = validRecord();
+    wasm.execution = {
+      status: 'halted',
+      steps: 11,
+      tStates: 77,
+      cpu: { a: 0x2a, halted: true },
+    };
+    wasm.provenance = {
+      assembler: 'atom',
+      atomVersion: '0.3.0',
+      executionSubstrate: 'triptych-wasm',
+      compatibleHosts: ['triptych-wasm'],
+    };
+    const native = validRecord();
+    native.execution = {
+      status: 'halted',
+      steps: 13,
+      tStates: 91,
+      cpu: { a: 0x2a, halted: true },
+    };
+    native.diagnostic = { column: 1, source: 'stage1.asm' };
+    native.provenance = {
+      assembler: 'atom',
+      atomVersion: '0.3.0',
+      executionSubstrate: 'triptych-native',
+      compatibleHosts: ['triptych-native'],
+    };
+    // Diagnostic meaning is public evidence; only property insertion order
+    // differs between these providers.
+    wasm.diagnostic = { source: 'stage1.asm', column: 1 };
+
+    expect(assertPortableConformanceParity([wasm, native])).toHaveLength(2);
+  });
+
+  it.each([
+    [
+      'too few records',
+      (values: ReturnType<typeof validRecord>[]) => {
+        values.splice(1);
+      },
+      'records',
+    ],
+    [
+      'different artifact bytes',
+      (values: ReturnType<typeof validRecord>[]) => {
+        values[1].artifact.bytes[0] = 0x00;
+      },
+      'records[1]',
+    ],
+    [
+      'different stop status',
+      (values: ReturnType<typeof validRecord>[]) => {
+        values[1].execution.status = 'fault';
+      },
+      'records[1]',
+    ],
+  ])('rejects parity with %s', (_name, mutate, path) => {
+    const values = [validRecord(), validRecord()];
+    mutate(values);
+    expect(() => assertPortableConformanceParity(values)).toThrow(
+      PortableConformanceParityError,
+    );
+    expect(() => assertPortableConformanceParity(values)).toThrow(path);
   });
 });
