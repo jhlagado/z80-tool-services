@@ -120,7 +120,10 @@ WASM module compiled `sub main()\nend\n` through the adapter to a 1,568-byte
 NOBJ after 13,780 instructions and 158,898 T-states. The Triptych trace
 capacity fix is part of this proof: the compiler's long run no longer detaches
 the adapter's zero-copy RAM view. This is one deterministic WASM vector, not
-yet the complete compiler battery or the macOS-native binding.
+yet the complete compiler battery or the macOS-native binding. After the fix,
+Triptych's existing `proof:wasm-host` and `proof:native-terminal` acceptance
+commands also passed; the first exercises the full browser/CP/M scenario set,
+while the second proves native macOS terminal byte preservation and restoration.
 
 ## Boundaries
 
