@@ -325,6 +325,8 @@ files and relevant resource limits.
 focused semantic and source/image gates, but deliberately does not replace
 the published CP/M artifact; see
 [`stage-2-native-precedence-candidate-2026-09-24.md`](../reports/stage-2-native-precedence-candidate-2026-09-24.md).
+The first real Triptych WASM compiler-host vector is also qualified; see
+[`stage-2-triptych-wasm-compiler-host-2026-09-24.md`](../reports/stage-2-triptych-wasm-compiler-host-2026-09-24.md).
 
 Compare Nucleus's service calls with the `z80-services` byte gateway. Freeze
 one meaning for each shared operation and generate compatibility projections
