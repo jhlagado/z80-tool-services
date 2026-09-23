@@ -151,6 +151,32 @@ and identical final disk digest `e8528fbe2a63a7c82e8214e0cb5d8698aba9f8c346e0521
 for both hosts. This closes the native guest-execution sub-gate while leaving
 the optional native compiler-host binding as a separate future step.
 
+## Nucleus adventure and editor parity checkpoint
+
+The broader `npm run proof:nucleus-adventure` proof also passed on
+2026-09-24. It ran the same source-packaging, ATOM/NUC compilation, generated
+program, Edit find/replace/save, rebuild and diagnostic workflow in both hosts,
+with **31 checkpoints** compared between WASM and macOS-native Triptych. The
+proof includes a small `sub main()` Nucleus program, source files transferred
+through the disk image, the compiled program being preserved across a bad
+source diagnostic, and the edited source being reopened and rebuilt.
+
+The release record contains the exact generated artefacts: the original
+program is 25,600 bytes with SHA-256
+`cc29bb5a6ebb7977cb338fdfb572f473b14fc9d8667ea74118451e46e615e7dc`, and the
+edited program is 25,600 bytes with SHA-256
+`ecb8880d3945c07e222f063537c96a7c8d13595b038f39821df92ebd9f81ef0`. The
+negative compilation case maps to `MAIN.NU`, byte offset 130, line 3,
+column 10, while the previously compiled program remains runnable. Native
+and WASM matched on console transcript, terminal state, exported files and
+disk image state for all checkpoints.
+
+This closes the end-to-end guest workflow sub-gate for the qualified ATOM
+line: the browser and native hosts can exercise the real CP/M tools and a
+Nucleus application without host-specific observable differences. It still
+does not close active `compiler-rewrite-12k` reconciliation, nor does it make
+the Rust host a compiler provider; those remain separate exit criteria.
+
 ## Boundaries
 
 - ATOM is the production assembler and the only assembler used for new source
