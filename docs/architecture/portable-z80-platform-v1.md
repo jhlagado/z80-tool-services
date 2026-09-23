@@ -364,6 +364,9 @@ failure cases pass on the intended native and WASM profiles.
 
 ### Stage 5: Skate separation
 
+**Progress:** the provider-boundary predicate is qualified; see
+[`stage-5-skate-effects-2026-09-24.md`](../reports/stage-5-skate-effects-2026-09-24.md).
+
 Separate Skate compiler source/output transport from generated-program runtime
 effects. Put CP/M FCB and BDOS details behind a Skate CP/M adapter. Use
 `z80-tool-services` for compiler operations and `z80-services` for running
