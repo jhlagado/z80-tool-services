@@ -202,5 +202,9 @@ The shared resolver semantics are specified by the
 [Z80 source preparation contract](docs/specifications/z80-source-preparation.md).
 Cross-host execution evidence uses the
 [Z80 portable conformance record](docs/specifications/z80-portable-conformance-v1.md).
+`validatePortableConformanceRecord` is the dependency-free runtime validator
+for that JSON shape; it checks the stable identity, address, digest and host
+provenance fields before a record is accepted as evidence. Profile-owned
+execution and diagnostic observations remain opaque to this shared layer.
 Debug80 retains historical copies for provenance; new consumers must link the
 specifications from this repository.

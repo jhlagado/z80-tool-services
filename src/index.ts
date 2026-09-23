@@ -20,3 +20,4 @@ export * from './nobj-v1-link.js';
 export * from './nobj-legacy-common.js';
 export * from './nobj-atom-legacy.js';
 export * from './nobj-nucleus-legacy.js';
+export * from './portable-conformance.js';

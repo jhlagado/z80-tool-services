@@ -27,6 +27,15 @@ The record must not contain absolute paths, host stack traces, timestamps,
 random identifiers or other values that make the same qualified run differ
 between machines. A provider may keep those details in a separate local log.
 
+The package export `validatePortableConformanceRecord(value)` performs the
+shared structural checks. It rejects a wrong schema, missing identity or
+provenance fields, host paths used as logical identities, malformed SHA-256
+digests, invalid octets, address ranges that do not cover the supplied bytes,
+duplicate compatible hosts, and non-classified execution results. It does not
+interpret profile-owned counters, registers or diagnostic fields. A consumer
+may therefore use the validator at a release boundary without making the
+shared package the authority for a machine's execution semantics.
+
 ## Source and artifact identity
 
 `source.logicalIdentity` is a stable project-relative identity, not a host
