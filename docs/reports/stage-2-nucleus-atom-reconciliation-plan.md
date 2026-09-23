@@ -70,6 +70,24 @@ and image battery passed **63/63**, and type checking plus the runtime-boundary
 check passed. The commit remains isolated until the active 12K source line has
 been reconciled; it is not a merge of the two compiler histories.
 
+## Triptych substrate checkpoint
+
+Triptych commit `eb5fcd9` (`wasm-execution-surface`) now exposes the lower host
+surface needed by a future Nucleus or Atom adapter on the two acceptance
+platforms. The Rust core can install architectural CPU state and remove the
+reset overlay at a bare-image boundary. The WASM host exposes checked image
+RAM writes, CPU-field updates, a stable 64 KiB view address, and ordered full
+port tracing. A five-instruction output-and-halt predicate proves the setup,
+service-boundary observation and final state; the validation was run with the
+full Rust workspace, all features and clippy warnings denied, plus a release
+`wasm32-unknown-unknown` build and wasm-bindgen declaration generation.
+
+This is deliberately a substrate proof, not a claim that Nucleus has already
+compiled through Rust/WASM. The next adapter must preserve the Nucleus image,
+register/flag updates and host-service ordering against this surface, then
+produce the portable conformance record. macOS-native and WASM remain the
+acceptance targets; ESP32 is outside this gate.
+
 ## Boundaries
 
 - ATOM is the production assembler and the only assembler used for new source
