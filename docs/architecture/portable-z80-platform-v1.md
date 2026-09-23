@@ -394,6 +394,9 @@ native/WASM distribution-parity proof at Triptych `44ba310`; see Triptych's
 The generated Skate COM now also runs through both the native Rust execution
 host and the built WASM binding using the same patchable byte gateway and exact
 output trace; see the [Stage 5 report](../reports/stage-5-skate-effects-2026-09-24.md).
+The Nucleus compiler host now also has an opt-in Triptych WASM predicate with
+identical NOBJ, materialised-image and Intel HEX results; see
+[`stage-6-nucleus-triptych-wasm-2026-09-24.md`](../reports/stage-6-nucleus-triptych-wasm-2026-09-24.md).
 The remaining Stage 6 work is release/CI verification and widening the
 generated-program service subset, not a second CPU implementation. The
 retained fixtures and source provenance remain separate from production
