@@ -23,6 +23,7 @@ The reproducible checks were:
 cd /Users/johnhardy/projects/skate
 deno task check
 deno task test
+deno task test:cpm:generated-effects
 ```
 
 ## Result
