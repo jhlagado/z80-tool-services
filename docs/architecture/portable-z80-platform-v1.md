@@ -2,7 +2,7 @@
 
 ## Stage 0: contract and profile baseline
 
-**Status:** proposed architecture baseline
+**Status:** accepted working baseline; software qualification in progress
 **Date:** 2026-09-24
 **Home:** `z80-tool-services`
 
@@ -307,6 +307,10 @@ legacy exception, including the Debug80 specification links, the Debug80 host
 path, Nucleus's AZM proof and CP/M-specific adapters, has an explicit owner,
 reason and migration stage. No dependency remains unexplained.
 
+**Progress:** the ownership map, profile record and migration exceptions have
+been accepted as the working baseline. The software target is WASM plus
+macOS-native Triptych; ESP32 is explicitly deferred.
+
 ### Stage 1: behaviour inventory
 
 Capture golden, user-visible vectors for Atom assembly, Nucleus compilation,
@@ -397,10 +401,13 @@ output trace; see the [Stage 5 report](../reports/stage-5-skate-effects-2026-09-
 The Nucleus compiler host now also has an opt-in Triptych WASM predicate with
 identical NOBJ, materialised-image and Intel HEX results; see
 [`stage-6-nucleus-triptych-wasm-2026-09-24.md`](../reports/stage-6-nucleus-triptych-wasm-2026-09-24.md).
-The remaining Stage 6 work is release/CI verification and widening the
-generated-program service subset, not a second CPU implementation. The
-retained fixtures and source provenance remain separate from production
-dependencies.
+The complete Triptych repository check now passes on macOS, including browser
+acceptance, native/WASM CP/M parity, Skate, Nucleus adventure, large-drive
+limits, Rust/Clippy and the release WASM build; see the [full-check
+report](../reports/stage-6-triptych-full-check-2026-09-24.md). The remaining
+Stage 6 work is release/CI wiring and widening the generated-program service
+subset, not a second CPU implementation. The retained fixtures and source
+provenance remain separate from production dependencies.
 
 **Gate:** native/WASM guest parity and hosted release verification pass. No
 ESP32 build or hardware evidence is required for this project; any later ESP32
@@ -417,8 +424,11 @@ reference adapters and Debug80 itself remains a direct product consumer.
 The Atom-first replacement seam now has an opt-in Triptych WASM proof; see
 [`stage-7-atom-triptych-wasm-2026-09-24.md`](../reports/stage-7-atom-triptych-wasm-2026-09-24.md).
 It compares the existing Atom runner's generated image and service trace with
-the Debug80 reference. The native bare-host adapter is still a separate gate;
-the existing ATOM.COM native/WASM CP/M proof does not substitute for it.
+the Debug80 reference. The native bare-host adapter is still an optional
+separate gate; the existing ATOM.COM native/WASM CP/M proof does not substitute
+for it, but the accepted software target does not require a second in-process
+FFI layer when the native guest path already qualifies the released CP/M
+artefact.
 
 Keep the Runtime optional rather than removing it. Build and qualify an
 Atom-first native/WASM replacement against the existing execution seam, then
