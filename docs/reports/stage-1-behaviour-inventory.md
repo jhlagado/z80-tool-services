@@ -38,7 +38,7 @@ cd /Users/johnhardy/projects/z80-tool-services
 npm test
 ```
 
-Result: **119 tests passed in 17 files** after temporarily linking the checked-
+Result: **128 tests passed in 18 files** after temporarily linking the checked-
 out Atom package into `node_modules/atom-z80` for the two native-consumer test
 suites. Without that local development link, the package build still succeeds
 but those suites stop at `Cannot find package 'atom-z80'`. The link is a local
@@ -47,7 +47,10 @@ test setup detail, not a repository change and is removed after the run.
 The package currently builds its TypeScript distribution and generated native
 ABI. The two formerly external normative documents now live under this
 repository; Debug80 retains historical copies while consumer links and pins
-are migrated. No new contract is being introduced to address that seam.
+are migrated. The portable conformance record now has an executable,
+dependency-free validator for its stable identity, artifact extent/digest and
+host provenance; profile-owned execution observations remain outside that
+validator.
 
 ### Shared running-program services
 
