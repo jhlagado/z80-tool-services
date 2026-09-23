@@ -92,7 +92,7 @@ acceptance targets; ESP32 is outside this gate.
 
 ## Nucleus WASM adapter checkpoint
 
-The isolated ATOM-native Nucleus line now contains commit `5ded75b`
+The isolated ATOM-native Nucleus line now contains commit `79f11c3`
 (`nucleus-native-adapter-clean`), which supplies
 `createTriptychWasmExecutionAdapter`. It injects the generated Triptych
 wasm-bindgen module structurally rather than adding a Triptych package
@@ -113,6 +113,14 @@ vectors and then add the native macOS binding. As a lower-level integration
 smoke, the generated Triptych web-bindgen module was instantiated from the
 release WASM and driven through this adapter with `OUT (n),A` followed by
 `HALT`; it produced the expected full-port trace and halted state.
+
+That compiler gate has now passed for the first direct source case. With
+Triptych commit `5ee04a4` and Nucleus commit `79f11c3`, the generated release
+WASM module compiled `sub main()\nend\n` through the adapter to a 1,568-byte
+NOBJ after 13,780 instructions and 158,898 T-states. The Triptych trace
+capacity fix is part of this proof: the compiler's long run no longer detaches
+the adapter's zero-copy RAM view. This is one deterministic WASM vector, not
+yet the complete compiler battery or the macOS-native binding.
 
 ## Boundaries
 
