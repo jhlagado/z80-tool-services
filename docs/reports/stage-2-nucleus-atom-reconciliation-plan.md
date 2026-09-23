@@ -72,15 +72,17 @@ been reconciled; it is not a merge of the two compiler histories.
 
 ## Triptych substrate checkpoint
 
-Triptych commit `eb5fcd9` (`wasm-execution-surface`) now exposes the lower host
-surface needed by a future Nucleus or Atom adapter on the two acceptance
-platforms. The Rust core can install architectural CPU state and remove the
-reset overlay at a bare-image boundary. The WASM host exposes checked image
-RAM writes, CPU-field updates, a stable 64 KiB view address, and ordered full
-port tracing. A five-instruction output-and-halt predicate proves the setup,
-service-boundary observation and final state; the validation was run with the
-full Rust workspace, all features and clippy warnings denied, plus a release
-`wasm32-unknown-unknown` build and wasm-bindgen declaration generation.
+Triptych commits `d2f0d5b` and `21d85f3` now expose the lower host surface
+needed by a future Nucleus or Atom adapter on the two acceptance platforms.
+The Rust core can install architectural CPU state and remove the reset
+overlay at a bare-image boundary. The WASM host exposes checked image RAM
+writes, CPU-field updates, a stable 64 KiB view address, and ordered full port
+tracing. The native host now supplies the same image, state, buffered-console
+and trace surface. A five-instruction output-and-halt predicate proves the
+setup, service-boundary observation and final state on both hosts; the
+validation was run with the full Rust workspace, all features and clippy
+warnings denied, plus a release `wasm32-unknown-unknown` build and
+wasm-bindgen declaration generation.
 
 This is deliberately a substrate proof, not a claim that Nucleus has already
 compiled through Rust/WASM. The next adapter must preserve the Nucleus image,
