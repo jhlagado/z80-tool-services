@@ -321,6 +321,11 @@ files and relevant resource limits.
 
 ### Stage 2: contract convergence
 
+**Progress:** an isolated ATOM-native precedence-climber candidate passes the
+focused semantic and source/image gates, but deliberately does not replace
+the published CP/M artifact; see
+[`stage-2-native-precedence-candidate-2026-09-24.md`](../reports/stage-2-native-precedence-candidate-2026-09-24.md).
+
 Compare Nucleus's service calls with the `z80-services` byte gateway. Freeze
 one meaning for each shared operation and generate compatibility projections
 where an existing consumer needs its current entry shape. Keep transport and
