@@ -388,11 +388,16 @@ Use one Rust CPU core for native macOS/Linux and WASM. ESP32-S3 build, boot and
 physical timing are explicitly deferred and do not block this roadmap. Host
 simulation and browser proof do not count as hardware measurements.
 
-**Progress:** the first generated Skate COM now runs through both the native
-Rust execution host and the built WASM binding using the same patchable byte
-gateway and exact output trace. The retained fixture and source provenance are
-in Triptych; broader Atom, Nucleus, Edit and CP/M guest parity remains the
-completion gate.
+**Progress:** the pinned ATOM, NUC and EDIT CP/M workflow already passes the
+native/WASM distribution-parity proof at Triptych `44ba310`; see Triptych's
+[`native-wasm-distribution-parity.md`](https://github.com/jhlagado/triptych/blob/44ba31043fbce95df82bb4e07ea607c8c03c688d/docs/reports/native-wasm-distribution-parity.md).
+The generated Skate COM now also runs through both the native Rust execution
+host and the built WASM binding using the same patchable byte gateway and exact
+output trace; see the [Stage 5 report](../reports/stage-5-skate-effects-2026-09-24.md).
+The remaining Stage 6 work is release/CI verification and widening the
+generated-program service subset, not a second CPU implementation. The
+retained fixtures and source provenance remain separate from production
+dependencies.
 
 **Gate:** native/WASM guest parity and hosted release verification pass. No
 ESP32 build or hardware evidence is required for this project; any later ESP32
@@ -400,9 +405,19 @@ work must be labelled as a separate target qualification.
 
 ### Stage 7: Debug80 retirement decision
 
-After active consumers pass their own gates, make Debug80 Runtime optional.
-Retain it as a reference if it remains useful. Remove it only when a clean
-consumer audit proves that no required build or test depends on it.
+**Progress:** the first consumer audit is recorded in
+[`stage-7-debug80-consumer-audit-2026-09-24.md`](../reports/stage-7-debug80-consumer-audit-2026-09-24.md).
+It confirms that Triptych's production native/WASM path is already free of
+Debug80 Runtime, while Atom and Nucleus still use it behind replaceable
+reference adapters and Debug80 itself remains a direct product consumer.
+
+Keep the Runtime optional rather than removing it. Build and qualify an
+Atom-first native/WASM replacement against the existing execution seam, then
+repeat the audit for Nucleus and the remaining test-only consumers. Remove it
+from an individual project only after that project's conformance record passes
+without the oracle. Remove the standalone Runtime only when the Debug80
+extension and all required development workflows have an explicit replacement
+or an intentional retained-support decision.
 
 ### Stage 8: future operating systems
 

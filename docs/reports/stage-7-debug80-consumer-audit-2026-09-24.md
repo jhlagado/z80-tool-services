@@ -1,0 +1,104 @@
+# Stage 7 Debug80 Runtime consumer audit: 2026-09-24
+
+This report records the first consumer audit for the Debug80 Runtime
+retirement decision in the [portable Z80 platform architecture](../architecture/portable-z80-platform-v1.md).
+It is an inventory, not a removal. The goal is to distinguish production
+machine dependencies from development and differential-test dependencies
+before changing any package boundary.
+
+## Audited repositories
+
+The audit covered the active repositories that participate in the current
+Atom, Nucleus, Edit, Skate, Portable CP/M and Triptych workflow:
+
+| Repository        | Revision inspected                  | Debug80 Runtime role                                                                                                        |
+| ----------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Atom              | `d1fd7c1`                           | Default host execution adapter and host/test support; Node/Deno stage-3 reference path                                      |
+| Nucleus           | working tree `compiler-rewrite-12k` | Optional peer for the compiler execution adapter and proof harness; the package has no runtime dependency in `dependencies` |
+| Edit              | `editor-engine-foundations`         | Development and editor-engine tests; its released COM is not a Runtime package                                              |
+| Skate             | `1e18a7a`                           | Deno test harness and generated-program differential proof; production effect boundaries are provider-facing                |
+| Portable CP/M     | `main`                              | Test-only CP/M machine and BDOS harness                                                                                     |
+| Triptych          | `44ba310`                           | Development/test helpers and historical model checks only; native Rust and WASM production hosts do not import the Runtime  |
+| z80-services      | `main`                              | Native byte-gateway proof implementation only                                                                               |
+| z80-tool-services | `95ec7ec`                           | NOBJ consumer and reference conformance tests only                                                                          |
+| Debug80           | `standalone-cpm-consumer`           | The VS Code debugger and platform host; this is the Runtime's direct product consumer                                       |
+| Debug80 Runtime   | `main`                              | The JavaScript reference execution substrate being considered for eventual retirement or retention as an oracle             |
+
+The inspected working trees contain unrelated user changes in Atom, Nucleus,
+Edit and z80-tool-services. The audit did not modify or stage those changes.
+
+## Findings
+
+### No production Triptych dependency
+
+Triptych's production execution path is Rust: the shared CPU core, native host,
+WASM host and CP/M BIOS/storage providers. Its `@jhlagado/debug80-runtime`
+entry in `devDependencies` supports existing JavaScript proofs and test
+fixtures. The full Triptych gate, including the native and built-WASM Skate
+fixture, passes without making Runtime part of the shipped Rust/WASM surface.
+
+The current native/WASM CP/M distribution proof also qualifies the pinned
+ATOM, NUC and EDIT workflow at Triptych `44ba310`; the newer generated Skate
+fixture qualifies the non-CP/M byte-gateway console subset on both host
+surfaces. These are host and WASM measurements, not ESP32 evidence.
+
+### Atom and Nucleus still need a replacement execution adapter
+
+Atom's public execution seam is intentionally small (`parseImage`, `create`,
+mutable memory, CPU state and `step`). Its current adapter imports Debug80
+Runtime. Nucleus exposes an analogous seam and keeps the Runtime peer optional,
+but its current proof adapter also imports the Runtime. These are the two
+remaining application-level reasons to retain the reference implementation
+while a Rust/WASM adapter is developed and compared.
+
+Atom's Node/Deno stage-3 proof is already independent at the public-host level:
+both hosts produce the same source identity, diagnostics and artifact hashes.
+That proof does not claim that the underlying Runtime has been replaced.
+
+### Test-only consumers are not retirement blockers by themselves
+
+Edit, Skate, Portable CP/M, z80-services and z80-tool-services use the Runtime
+to run fast reference or differential tests. Their contracts are now recorded
+at the service and host boundaries. They can migrate one proof at a time after
+an equivalent native/WASM or Deno provider exists; deleting the dependency
+before that would remove a useful oracle without improving the product path.
+
+### Debug80 remains a separate product consumer
+
+The Debug80 VS Code extension directly consumes Runtime CPU, platform and
+session types. It is not a Triptych production dependency and should not be
+forced into the Triptych migration. Its eventual choice is explicit: keep the
+released Runtime as the extension's supported debugger substrate, or migrate
+the extension behind a versioned execution interface after a separate product
+plan. The audit provides no justification for deleting it now.
+
+## Retirement decision
+
+The safe decision at this checkpoint is **optional, not removed**:
+
+1. Keep Debug80 Runtime pinned for Atom and Nucleus reference adapters and for
+   differential tests.
+2. Keep it as the Debug80 extension's supported runtime.
+3. Keep Triptych production code and firmware free of the dependency; this is
+   already true for native Rust and WASM production builds.
+4. Build a replacement adapter against the existing Atom/Nucleus execution
+   seams, beginning with a small deterministic console fixture. Compare it
+   with the Runtime using the existing conformance records.
+5. Re-run this audit after the replacement passes Atom, Nucleus and Triptych
+   host vectors. Only then consider changing peer/dev dependency placement or
+   dropping the Runtime from any individual test suite.
+
+No new `z80-runtime` repository is justified by this audit alone. A new
+repository needs a stable execution contract, at least two independent
+consumers and a release reason that cannot be met by an existing adapter.
+
+## Next gate
+
+The next bounded implementation is an Atom-first replacement adapter proof on
+the existing execution seam. It should run one retained source fixture through
+the candidate native/WASM substrate, compare the exact console, diagnostics,
+artifact and stop results with the Node/Deno record, and leave Debug80 Runtime
+available as the differential oracle. Nucleus can then use the same substrate
+shape without changing its language or CP/M contracts.
+
+ESP32 remains explicitly deferred and is not part of this audit or its gate.
