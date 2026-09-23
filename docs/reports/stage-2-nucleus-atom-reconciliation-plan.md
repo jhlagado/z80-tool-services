@@ -124,6 +124,12 @@ yet the complete compiler battery or the macOS-native binding. After the fix,
 Triptych's existing `proof:wasm-host` and `proof:native-terminal` acceptance
 commands also passed; the first exercises the full browser/CP/M scenario set,
 while the second proves native macOS terminal byte preservation and restoration.
+The same generated module also compiled four direct-adapter cases in one
+process: direct empty source (13,780 instructions, 158,898 T-states, 1,568
+bytes), MON3 empty source with identical output, direct initialized data
+(20,617 instructions, 223,538 T-states, 1,694 bytes), and direct debug-map
+source (13,879 instructions, 159,995 T-states, 1,568 bytes). All four
+completed successfully.
 
 ## Boundaries
 
