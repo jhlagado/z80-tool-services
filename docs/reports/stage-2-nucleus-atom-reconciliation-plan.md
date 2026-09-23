@@ -90,6 +90,27 @@ register/flag updates and host-service ordering against this surface, then
 produce the portable conformance record. macOS-native and WASM remain the
 acceptance targets; ESP32 is outside this gate.
 
+## Nucleus WASM adapter checkpoint
+
+The isolated ATOM-native Nucleus line now contains commit `f2cb306`
+(`nucleus-native-adapter-clean`), which supplies
+`createTriptychWasmExecutionAdapter`. It injects the generated Triptych
+wasm-bindgen module structurally rather than adding a Triptych package
+dependency, parses the compiler's flat Intel HEX without Debug80, maps the
+fixed 64 KiB RAM view, installs CPU and flag state at instruction boundaries,
+and translates Triptych's packed full-port write trace into the existing
+Nucleus host callback. Three fake-binding tests cover malformed images,
+zero-copy memory, state synchronisation, output ordering and halting.
+
+The adapter's bounded gates passed: TypeScript build; 97 Atom/CP/M boundary
+tests; 63 ATOM source and image proofs; compiler-image reproducibility;
+runtime-boundary; package export/CLI checks. The repository-wide Vitest run was
+manually stopped after remaining CPU-bound in its existing aggregate compiler
+battery, so it is not reported as a full-suite pass. This is an adapter
+qualification increment, not yet a Rust/WASM Nucleus compiler proof: the next
+gate must run the actual generated Triptych module against the same compiler
+vectors and then add the native macOS binding.
+
 ## Boundaries
 
 - ATOM is the production assembler and the only assembler used for new source
