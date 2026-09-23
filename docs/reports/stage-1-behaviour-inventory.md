@@ -167,6 +167,13 @@ completed its measured engine, gap, display and search workloads. Skate's Deno
 check passed formatting, linting, compiler-budget and source-inclusion tests
 (one budget test and four source-inclusion tests). These are host and product
 baselines, not evidence that the applications already share one runtime ABI.
+The follow-up Skate consumer gate also passed on 2026-09-24:
+`deno task test` completed with **34 effect/provider tests and 2 CP/M bridge
+tests**. The new `ByteGatewayCpmByteChannel` forwards the shared
+`readInputByte`/`writeOutputByte` meanings while preserving Skate-owned echo,
+line-editing, CR/LF and Control-Z policy. Its six focused tests include
+malformed provider-byte rejection; the complete Deno check remains green.
+
 Their next work is to adopt the frozen service records at their own explicit
 boundaries. The first Skate consumer increment is now explicit: z80-services
 commit `3e7de17` records the `read-char`/`write-char` projection, and Skate
