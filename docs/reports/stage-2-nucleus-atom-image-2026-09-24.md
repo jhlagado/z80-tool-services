@@ -33,12 +33,12 @@ the generated compiler-image path.
 
 ## Revisions and commands
 
-| Component | Revision or working boundary |
-| --- | --- |
-| Nucleus | active `compiler-rewrite-12k` checkout |
-| ATOM package | `atom-z80` pinned to `802b5c2d320bec777f427755ff2d7338e3b80a05` |
-| generator | `scripts/generate-compiler-images.mjs` |
-| comparison helper | `scripts/image-comparison.mjs` (test-only) |
+| Component         | Revision or working boundary                                    |
+| ----------------- | --------------------------------------------------------------- |
+| Nucleus           | active `compiler-rewrite-12k` checkout                          |
+| ATOM package      | `atom-z80` pinned to `802b5c2d320bec777f427755ff2d7338e3b80a05` |
+| generator         | `scripts/generate-compiler-images.mjs`                          |
+| comparison helper | `scripts/image-comparison.mjs` (test-only)                      |
 
 The following commands passed in the Nucleus checkout:
 
@@ -55,6 +55,14 @@ TRIPTYCH_WASM_MODULE=/Users/johnhardy/projects/triptych/dist/wasm/triptych_host_
   result: pass
 ```
 
+The full Nucleus development gate also passed with the current linked AZM
+contract oracle:
+
+```text
+npm run typecheck && npm test -- --reporter=dot
+  17 test files, 150 tests passed
+```
+
 The replacement images were compared with the previously checked-in image
 artifacts in an isolated probe. Both normal and debug HEX streams are
 byte-for-byte identical. The symbol maps preserve every previous symbol and
@@ -63,12 +71,12 @@ source contracts; no existing symbol value changed.
 
 The WASM compiler-host proof remains identical:
 
-| Field | Triptych WASM | Debug80 reference |
-| --- | ---: | ---: |
-| NOBJ bytes | `1,683` | `1,683` |
-| materialised bytes | `4,096` | `4,096` |
-| Intel HEX SHA-256 | `0db201a410427dfa00c72bbe988e49b338f9346e3babfd048333a9bbb792fe4d` | same |
-| cycles | `230,448` | `230,448` |
+| Field              |                                                      Triptych WASM | Debug80 reference |
+| ------------------ | -----------------------------------------------------------------: | ----------------: |
+| NOBJ bytes         |                                                            `1,683` |           `1,683` |
+| materialised bytes |                                                            `4,096` |           `4,096` |
+| Intel HEX SHA-256  | `0db201a410427dfa00c72bbe988e49b338f9346e3babfd048333a9bbb792fe4d` |              same |
+| cycles             |                                                          `230,448` |         `230,448` |
 
 ## Interpretation
 
