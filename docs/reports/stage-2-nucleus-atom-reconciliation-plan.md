@@ -92,7 +92,7 @@ acceptance targets; ESP32 is outside this gate.
 
 ## Nucleus WASM adapter checkpoint
 
-The isolated ATOM-native Nucleus line now contains commit `f2cb306`
+The isolated ATOM-native Nucleus line now contains commit `5ded75b`
 (`nucleus-native-adapter-clean`), which supplies
 `createTriptychWasmExecutionAdapter`. It injects the generated Triptych
 wasm-bindgen module structurally rather than adding a Triptych package
