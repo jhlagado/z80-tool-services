@@ -62,6 +62,14 @@ compiler images still come from the AZM path, and the adapter has not been
 implemented for the Rust machine. Those are intentionally separate gates in
 the sequence below.
 
+The qualified ATOM-native branch now has the same execution seam in an isolated
+integration commit (`2e55e4a`, branch `nucleus-native-adapter-clean`). It covers
+both resident and streaming compiler hosts without changing compiler images or
+language semantics. Its compiler file passed **38/38** tests, the ATOM source
+and image battery passed **63/63**, and type checking plus the runtime-boundary
+check passed. The commit remains isolated until the active 12K source line has
+been reconciled; it is not a merge of the two compiler histories.
+
 ## Boundaries
 
 - ATOM is the production assembler and the only assembler used for new source
