@@ -23,7 +23,7 @@ platform migration is complete.
 | Atom bare host                | Atom host adapter plus pinned Debug80 Runtime | 153 Atom host tests plus the checked-in portable record                                                                               | Add an independent execution substrate; Node and Deno remain reference-host checks                              |
 | `ATOM.COM` under CP/M         | Atom CP/M profile                             | Triptych WASM proof includes Atom compile and generated-program runs                                                                  | Compare the bare-host result with the CP/M profile; do not collapse the two profiles                            |
 | Nucleus and Edit              | Their own language/editor profiles            | Nucleus has 150 tests; its compiler host now accepts an explicit execution adapter; Triptych proof exercises compile/edit flows; Nucleus still has a documented AZM legacy build exception    | Inventory exact inputs/outputs and qualify the shared byte-gateway projection before changing the compiler path |
-| Skate                         | Skate-owned compiler and effect protocol      | Repository has Deno tooling and CP/M proofs                                                                                           | Separate compiler transport from generated-program effects in a later stage                                     |
+| Skate                         | Skate-owned compiler and effect protocol      | Deno tooling and CP/M proofs; z80-services now records a Skate byte-gateway projection and Skate has a validated console-channel adapter | Separate compiler transport from generated-program effects in a later stage                                     |
 
 ## Baseline evidence
 
@@ -168,7 +168,11 @@ check passed formatting, linting, compiler-budget and source-inclusion tests
 (one budget test and four source-inclusion tests). These are host and product
 baselines, not evidence that the applications already share one runtime ABI.
 Their next work is to adopt the frozen service records at their own explicit
-boundaries.
+boundaries. The first Skate consumer increment is now explicit: z80-services
+commit `3e7de17` records the `read-char`/`write-char` projection, and Skate
+commit `10d8bb6` adapts those two byte operations without moving CP/M echo,
+line-editing, CR/LF or Control-Z policy into the shared contract. The adapter
+has six focused tests; the full Skate check remains green.
 
 ## Current seams to preserve
 
