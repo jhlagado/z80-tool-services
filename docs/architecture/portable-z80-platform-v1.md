@@ -332,6 +332,9 @@ approved provider passes the same observable vectors.
 
 ### Stage 3: portable JavaScript execution seam
 
+**Progress:** Atom's first Node/Deno host predicate is qualified; see
+[`stage-3-node-deno-atom-2026-09-24.md`](../reports/stage-3-node-deno-atom-2026-09-24.md).
+
 Define the minimum execution interface and wrap the existing Debug80 Runtime
 without rewriting it. Make the public harness standard ESM, run it under Deno
 while retaining Node compatibility and adapt Atom's bare harness first. Keep
