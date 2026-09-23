@@ -1,7 +1,7 @@
 # Stage 2: Nucleus–ATOM reconciliation plan
 
-**Status:** in progress; host seam and first source/integration probe landed,
-source/artifact reconciliation still pending
+**Status:** in progress; host seam, compiler-adapter vectors and native/WASM
+guest parity landed, source/artifact reconciliation still pending
 
 **Scope:** reconcile the active Nucleus `compiler-rewrite-12k` line with the
 qualified ATOM-native line `atom-source-native`/`nucleus-v0.3.1`. The target
