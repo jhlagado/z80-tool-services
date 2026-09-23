@@ -4,8 +4,8 @@ This report records the first Stage 5 qualification slice from the
 [portable Z80 architecture](../architecture/portable-z80-platform-v1.md).
 It confirms that Skate's running-program effect protocol is provider-neutral
 at the TypeScript boundary, while keeping CP/M policy in its named adapter.
-The smallest generated-program trace is now qualified as well; the generated
-runtime's remaining CP/M ABI dependency is recorded explicitly below.
+The smallest generated-program trace is now qualified as well; the image keeps
+a CP/M default adapter but exposes host-patchable byte-gateway vectors.
 
 ## Revisions and commands
 
@@ -14,7 +14,7 @@ runtime's remaining CP/M ABI dependency is recorded explicitly below.
 | Skate | `ed95e38` (`Document Skate byte gateway boundary`) |
 | Skate console adapter | `10d8bb6` (`Adapt Skate console effects to byte gateway`) |
 | z80-services projection | `3e7de17` (`Add Skate byte gateway projection`) |
-| generated-program proof | Skate `1344c27` (`Prove generated Skate effects on Triptych provider`) |
+| generated-program proof | Skate `8d90c28` (`Add patchable Skate console vectors`) |
 | effect profile | Skate external-effects protocol v1; byte-gateway/0 console subset |
 
 The reproducible checks were:
@@ -67,10 +67,11 @@ included in `deno task test:cpm`. The proof:
    capability returns the shared `unsupported` error without a backend write.
 
 This closes the generated-program trace predicate for the current console
-subset. It deliberately does **not** claim that the generated runtime is
-already OS-neutral: its running-program ABI is still the CP/M console call
-convention, and the host adapter translates that convention into the provider
-contract. Removing that last CP/M ABI dependency is a later migration stage,
-not an unstated consequence of this proof.
+subset. The generated image still contains the CP/M adapter as its default,
+but `SRTOUTV` and `SRTINV` are explicit three-byte `JP` vectors. A native or
+WASM machine profile can patch those targets before execution, so the running
+program reaches its byte gateway without entering BDOS. Removing the CP/M
+adapter bytes from a profile-specific image is a later size and packaging
+stage, not an unstated requirement of the shared contract.
 
 ESP32 is not part of this evidence or its acceptance gate.
