@@ -109,7 +109,10 @@ manually stopped after remaining CPU-bound in its existing aggregate compiler
 battery, so it is not reported as a full-suite pass. This is an adapter
 qualification increment, not yet a Rust/WASM Nucleus compiler proof: the next
 gate must run the actual generated Triptych module against the same compiler
-vectors and then add the native macOS binding.
+vectors and then add the native macOS binding. As a lower-level integration
+smoke, the generated Triptych web-bindgen module was instantiated from the
+release WASM and driven through this adapter with `OUT (n),A` followed by
+`HALT`; it produced the expected full-port trace and halted state.
 
 ## Boundaries
 
