@@ -43,6 +43,15 @@ safe migration therefore needs two explicit transformations:
 
 No generated ATOM file from this probe was copied into a project checkout.
 
+A second disposable probe applied only mechanical directive spelling changes
+(`.DB`/`.DW`/`.ORG`/`.EQU`/conditionals), recursively flattened the include
+graph, and ran the result through the ATOM native host. It did not produce a
+candidate image: the flattened part exceeded ATOM's 16-bit source-offset
+range before assembly. This is an additional boundary, not a reason to raise
+the ATOM limit. The active compiler must be recomposed into bounded source
+parts with leading `%INCLUDE` dependencies, as the qualified native line does,
+while retaining the 12K parser semantics and source diagnostics.
+
 ## Branch-integration probe
 
 An isolated worktree was created from `compiler-rewrite-12k` and `main` was
