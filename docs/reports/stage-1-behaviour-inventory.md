@@ -215,6 +215,14 @@ npm run verify:deno-stage1
 node --test test/host-stage1-record.test.mjs
 ```
 
+On 2026-09-24 the broader Atom host boundary was re-run from the pinned
+`main` checkout as a bounded portability gate. `npm run verify:deno-stage1`
+reported `stage-1 Atom conformance record: ok`, and the host suite completed
+with **153 passing tests and no failures**. The run remains explicitly a
+Debug80-reference-substrate result: it proves that the Node and Deno launchers
+consume one deterministic Atom contract, not that either launcher is already
+an independent CPU implementation.
+
 This is a host portability proof, not yet an independent CPU proof: both
 invocations still use Atom's pinned Debug80 reference substrate. Triptych also
 carries the corresponding `atom-stage1-halt` CPU fixture, executing the same
