@@ -48,12 +48,14 @@ Debug80 reference without importing Debug80 into Triptych production code.
 
 ## Remaining gates
 
-This does not claim that the active Nucleus `compiler-rewrite-12k` line has
-completed its ATOM source/image reconciliation. Its generated compiler-image
-path still has the historical AZM exception documented in the Stage 2 report.
-The remaining platform work is therefore:
+The active Nucleus `compiler-rewrite-12k` line now has a qualified ATOM
+source/image boundary; its normal and debug generated images are byte-for-byte
+identical to the checked-in images. The remaining AZM exception is confined to
+the existing proof/runtime differential oracle and is documented in the Stage
+2 image report. The remaining platform work is therefore:
 
-1. selectively port and qualify that active Nucleus line with ATOM;
+1. migrate the remaining Nucleus proof/runtime oracle slices without removing
+   the differential reference prematurely;
 2. widen the shared running-program service profile where a second real
    consumer requires it; and
 3. repeat the Debug80 consumer audit before retiring any reference adapter.

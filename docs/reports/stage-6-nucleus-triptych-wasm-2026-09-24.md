@@ -23,14 +23,14 @@ end
 The result compares NOBJ bytes, the materialised flat image and its Intel HEX
 identity. The exact observed result was:
 
-| Field | Triptych WASM | Debug80 reference |
-| --- | ---: | ---: |
-| NOBJ bytes | `1,683` | `1,683` |
-| materialised bytes | `4,096` | `4,096` |
-| Intel HEX SHA-256 | `0db201a410427dfa00c72bbe988e49b338f9346e3babfd048333a9bbb792fe4d` | same |
-| instructions | `22,675` | `22,571` |
-| cycles | `230,448` | `230,448` |
-| result | pass | pass |
+| Field              |                                                      Triptych WASM | Debug80 reference |
+| ------------------ | -----------------------------------------------------------------: | ----------------: |
+| NOBJ bytes         |                                                            `1,683` |           `1,683` |
+| materialised bytes |                                                            `4,096` |           `4,096` |
+| Intel HEX SHA-256  | `0db201a410427dfa00c72bbe988e49b338f9346e3babfd048333a9bbb792fe4d` |              same |
+| instructions       |                                                           `22,675` |          `22,571` |
+| cycles             |                                                          `230,448` |         `230,448` |
+| result             |                                                               pass |              pass |
 
 Instruction counts differ because the engines expose repeated Z80 block
 operations at different stepping granularity. The image, serialized object,
@@ -41,9 +41,9 @@ unclaimed.
 The adapter uses JavaScript-owned memory and instruction-boundary copies for
 the same wasm-bindgen view-lifetime reason recorded by the Atom proof. This is
 an integration/conformance path, not yet the high-throughput browser compiler
-path. The compiler-image build still has its historical AZM generation path;
-this proof only replaces the execution host and does not claim the ATOM image
-reconciliation is finished.
+path. The active compiler-image generator is now qualified separately through
+ATOM; the AZM imports retained by the proof/runtime modules are a differential
+oracle boundary, not the production image generator.
 
 ## Reproduction
 

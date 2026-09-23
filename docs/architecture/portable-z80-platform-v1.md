@@ -216,6 +216,13 @@ this boundary. Atom's resident core remains filesystem-free. A CP/M adapter,
 Node adapter, Deno adapter or Triptych adapter may provide the same service
 meaning without sharing a resident call sequence.
 
+The active Nucleus `compiler-rewrite-12k` image generator is now a qualified
+ATOM consumer. Its source-preparation boundary is private to Nucleus, records
+source provenance, and emits the same normal and debug image bytes as the
+checked-in artifacts. The older AZM imports retained by Nucleus proof/runtime
+modules are differential-oracle code only; they are not the production image
+authority and must not be used as an automatic fallback.
+
 Two specifications were a named legacy exception. Their text now lives in
 this repository without changing their identifiers or vectors. The Debug80
 copies remain historical provenance until consumers have moved their links and
