@@ -157,7 +157,7 @@ The audit found the following uses of `@jhlagado/debug80-runtime`:
 | **Portable CP/M**     | Test support uses the new CPU snapshot type while its named Debug80 harness remains the compatibility oracle.                            | Migrated in `4fdc62a`.                                       | CP/M machine and BDOS/BIOS behaviour.         |
 | **Triptych**          | Rust/WASM are production; JavaScript runtime imports are test/proof helpers only.                                                        | Generic proofs migrated in `5f804f0`; production unchanged.  | Rust/WASM machine and BIOS.                   |
 | **z80-services**      | Native byte-gateway tests instantiate the JS CPU.                                                                                        | Migrated in `2fb4692`.                                       | Service contract and native provider.         |
-| **z80-tool-services** | Native NOBJ consumer tests instantiate the JS CPU.                                                                                       | Migrated in `247e379`.                                       | Tool-service authority and native modules.    |
+| **z80-tool-services** | Native NOBJ consumer tests instantiate the JS CPU.                                                                                       | Migrated in `df62f08`.                                       | Tool-service authority and native modules.    |
 | **Debug80**           | The extension directly consumes generic CPU types and TEC/CP/M platform types.                                                           | No automatic migration; make it a separate product decision. | TEC, CP/M and debugger-facing compatibility.  |
 
 The migrated consumers pin `e4ee190`. The old revision pins remain only in
@@ -228,7 +228,7 @@ generic CPU or proof paths:
 | Skate             | `3f93298`  | Deno typecheck, scope-budget proof and generated-effects Triptych proof pass through the new import map.                              |
 | Portable CP/M     | `4fdc62a`  | CPU snapshot typing uses the new package; the named Debug80 test harness remains as the compatibility oracle.                         |
 | z80-services      | `2fb4692`  | Full Deno verification passes, including the native byte-gateway proof.                                                               |
-| z80-tool-services | `247e379`  | 132 tests and native NOBJ consumer proof pass.                                                                                        |
+| z80-tool-services | `df62f08`  | 132 tests and native NOBJ consumer proof pass.                                                                                        |
 | Triptych          | `62f49d7`  | New-runtime CPU conformance, typecheck, sound proof, and CP/M 2.2 compatibility proof pass; Rust/WASM production remains independent. |
 
 The new package itself passes its Node typecheck, lint, formatting, 90 generic
