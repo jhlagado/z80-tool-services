@@ -439,6 +439,13 @@ for it, but the accepted software target does not require a second in-process
 FFI layer when the native guest path already qualifies the released CP/M
 artefact.
 
+Nucleus's manifest and committed-NOBJ proof runner now accepts that same
+execution-adapter seam. Its banked proof has matched the Debug80 oracle on
+Triptych WASM for observable memory, NOBJ bytes, selected bank and cycle
+totals; instruction counts remain implementation-specific. This is a proof
+execution qualification, not yet removal of the historical AZM assembly
+oracle or the default Debug80 development adapter.
+
 Keep the Runtime optional rather than removing it. Build and qualify an
 Atom-first native/WASM replacement against the existing execution seam, then
 repeat the audit for Nucleus and the remaining test-only consumers. Remove it

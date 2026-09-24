@@ -93,13 +93,31 @@ No new `z80-runtime` repository is justified by this audit alone. A new
 repository needs a stable execution contract, at least two independent
 consumers and a release reason that cannot be met by an existing adapter.
 
+## New proof-harness gate
+
+Nucleus revision `0b858d0` now accepts the same `NucleusExecutionAdapter` for
+its manifest and committed-NOBJ proof runners. The default remains the
+Debug80 adapter, but the proof can run unchanged through Triptych WASM.
+
+`npm run verify:triptych-wasm-proof` passed for:
+
+- the 16-instruction memory-map proof;
+- the NOBJ materialisation proof; and
+- the banked target proof, including bank switching and committed NOBJ.
+
+The banked result had identical observable memory, NOBJ bytes, selected bank
+and cycle total (`10,384,694`) on both hosts. Instruction counts differed
+(`1,055,183` on the reference and `1,066,408` on Triptych), so they remain a
+measurement rather than a cross-host contract. This is the first proof-runner
+slice that no longer imports Debug80 Runtime directly; AZM remains the
+assembly oracle for these historical proof sources.
+
 ## Next gate
 
-The next bounded implementation is to extend the existing Atom/Nucleus
-replacement-host proofs to the remaining execution and diagnostic vectors. It
-should compare the exact console, diagnostics, artifact and stop results with
-the Node/Deno record, and leave Debug80 Runtime available as the differential
-oracle. Nucleus can then use the same substrate shape without changing its
-language or CP/M contracts.
+The next bounded implementation is to extend this adapter path to the
+remaining execution and diagnostic vectors, then decide whether individual
+Nucleus test groups can stop requiring the Debug80 peer while keeping it as an
+explicit differential oracle. The production compiler-image path is already
+ATOM-only; this gate concerns proof execution and historical assembly inputs.
 
 ESP32 remains explicitly deferred and is not part of this audit or its gate.

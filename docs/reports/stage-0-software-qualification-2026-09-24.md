@@ -28,6 +28,13 @@ described by that repository):
 | `debug80` | `npm run check:consumer-paths` | 43 consumer/release-path checks passed; shipping extension has no mandatory AZM dependency |
 | `debug80-runtime` | `npm run check` | typecheck, lint, format, 312 tests and package smoke passed |
 
+After the table checkpoint, Nucleus revision `0b858d0` also passed
+`npm run verify:triptych-wasm-proof`: the unchanged manifest/NOBJ proof runner
+matched Debug80 and Triptych WASM on memory-map, NOBJ and banked execution
+vectors. The banked vector matched observable memory, NOBJ bytes, selected
+bank and `10,384,694` cycles; CPU instruction counts remain
+implementation-specific.
+
 ## Contract and ownership outcome
 
 The architecture in
