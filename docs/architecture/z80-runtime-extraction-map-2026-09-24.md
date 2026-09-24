@@ -225,7 +225,7 @@ generic CPU or proof paths:
 | Atom              | `16fb8de`  | 369 Node tests pass; CP/M adapter remains on the compatibility runtime.                                                               |
 | Nucleus           | `6935269`  | 150 tests, Atom-source proofs and compiler-image checks pass.                                                                         |
 | Edit              | `63762528` | Editor CPU workload harness and measurements use the new package; CP/M terminal remains separate.                                     |
-| Skate             | `3f93298`  | Deno typecheck and scope-budget proof pass through the new import map.                                                                |
+| Skate             | `3f93298`  | Deno typecheck, scope-budget proof and generated-effects Triptych proof pass through the new import map.                              |
 | Portable CP/M     | `4fdc62a`  | CPU snapshot typing uses the new package; the named Debug80 test harness remains as the compatibility oracle.                         |
 | z80-services      | `2fb4692`  | Full Deno verification passes, including the native byte-gateway proof.                                                               |
 | z80-tool-services | `247e379`  | 132 tests and native NOBJ consumer proof pass.                                                                                        |
@@ -236,10 +236,11 @@ CPU tests and package smoke test. No production source imports the old runtime
 through these migrated paths. Debug80's product-specific runtime, TEC/CP/M
 platform modules and AZM integration remain unchanged.
 
-## Current decision and next implementation task
+## Completion state
 
-The boundary is implemented and documented. The remaining work is release
-housekeeping: push the consumer commits, refresh any downstream lockfiles that
-intentionally pin these revisions, and keep a separate compatibility gate for
-any future Debug80 migration. Do not remove or rewrite the legacy runtime until
-that product-specific gate exists.
+The boundary is implemented, documented and pushed in every targeted
+repository. Node and Deno consumers use the CPU-first package; Triptych's Rust
+and WASM implementations are qualified against it; and the old Debug80 bundle
+remains available for its explicit CP/M, TEC and debugger compatibility paths.
+The only future work is a separate, product-specific Debug80 migration decision.
+Do not remove or rewrite the legacy runtime until that gate exists.
