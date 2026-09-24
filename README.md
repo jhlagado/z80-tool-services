@@ -20,6 +20,12 @@ describes the safe integration of the active compiler-rewrite line with the
 qualified ATOM-native release. The current acceptance targets are Triptych's
 macOS-native and WASM hosts; ESP32 is deferred.
 
+The [Z80 Runtime extraction map](docs/architecture/z80-runtime-extraction-map-2026-09-24.md)
+records the selected CPU-first boundary for separating a future
+`@jhlagado/z80-runtime` package from the mixed Debug80 Runtime compatibility
+bundle. It also maps current consumers and the documentation homes for the
+runtime, service, tool, CP/M, Triptych and application contracts.
+
 ```sh
 npm install
 npm run check
