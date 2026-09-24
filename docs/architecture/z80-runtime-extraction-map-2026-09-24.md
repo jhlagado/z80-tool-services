@@ -220,16 +220,16 @@ The CPU-first package is public at
 `e4ee190`. The following repository commits use the new package for their
 generic CPU or proof paths:
 
-| Repository        | Commit     | Evidence                                                                                                                  |
-| ----------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Atom              | `16fb8de`  | 369 Node tests pass; CP/M adapter remains on the compatibility runtime.                                                   |
-| Nucleus           | `6935269`  | 150 tests, Atom-source proofs and compiler-image checks pass.                                                             |
-| Edit              | `63762528` | Editor CPU workload harness and measurements use the new package; CP/M terminal remains separate.                         |
-| Skate             | `3f93298`  | Deno typecheck and scope-budget proof pass through the new import map.                                                    |
-| Portable CP/M     | `4fdc62a`  | CPU snapshot typing uses the new package; the named Debug80 test harness remains as the compatibility oracle.             |
-| z80-services      | `2fb4692`  | Full Deno verification passes, including the native byte-gateway proof.                                                   |
-| z80-tool-services | `247e379`  | 132 tests and native NOBJ consumer proof pass.                                                                            |
-| Triptych          | `5f804f0`  | Typecheck, CPU conformance, sound proof, and CP/M 2.2 compatibility proof pass; Rust/WASM production remains independent. |
+| Repository        | Commit     | Evidence                                                                                                                              |
+| ----------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Atom              | `16fb8de`  | 369 Node tests pass; CP/M adapter remains on the compatibility runtime.                                                               |
+| Nucleus           | `6935269`  | 150 tests, Atom-source proofs and compiler-image checks pass.                                                                         |
+| Edit              | `63762528` | Editor CPU workload harness and measurements use the new package; CP/M terminal remains separate.                                     |
+| Skate             | `3f93298`  | Deno typecheck and scope-budget proof pass through the new import map.                                                                |
+| Portable CP/M     | `4fdc62a`  | CPU snapshot typing uses the new package; the named Debug80 test harness remains as the compatibility oracle.                         |
+| z80-services      | `2fb4692`  | Full Deno verification passes, including the native byte-gateway proof.                                                               |
+| z80-tool-services | `247e379`  | 132 tests and native NOBJ consumer proof pass.                                                                                        |
+| Triptych          | `62f49d7`  | New-runtime CPU conformance, typecheck, sound proof, and CP/M 2.2 compatibility proof pass; Rust/WASM production remains independent. |
 
 The new package itself passes its Node typecheck, lint, formatting, 90 generic
 CPU tests and package smoke test. No production source imports the old runtime
