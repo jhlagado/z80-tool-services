@@ -60,7 +60,7 @@
     "prepublishOnly": "npm run check"
   },
   "devDependencies": {
-    "@jhlagado/debug80-runtime": "git+https://github.com/jhlagado/debug80-runtime.git#b7343aa8c38c248abbc6ee801b4af270d4843ad6",
+    "@jhlagado/z80-runtime": "git+https://github.com/jhlagado/z80-runtime.git#e4ee190",
     "@jhlagado/nucleus": "git+https://github.com/jhlagado/nucleus.git#b5276a85fd36600a10dbd65039f0af3afc033f0d",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import { assembleNativeHarness } from './native-atom-harness.js';
-import { createZ80Runtime } from '@jhlagado/debug80-runtime';
+import { createZ80Runtime } from '@jhlagado/z80-runtime';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { nobjCrc16CcittFalse } from '../src/nobj-framing.js';
