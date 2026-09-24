@@ -1,13 +1,13 @@
 # Z80 Runtime extraction map
 
-**Status:** boundary selected; implementation not started  
+**Status:** CPU-first package published; generic consumer migration complete  
 **Date:** 2026-09-24  
 **Decision home:** `z80-tool-services`
 
 This document separates the reusable Z80 execution substrate from the current
-`@jhlagado/debug80-runtime` package. It is an extraction map and documentation
-index, not a code move. The existing package remains intact while consumers are
-migrated one proof at a time.
+`@jhlagado/debug80-runtime` package. It began as an extraction map and now also
+records the completed CPU-first move and its consumer evidence. The existing
+package remains intact for Debug80, CP/M and TEC compatibility paths.
 
 ## Executive decision
 
@@ -148,22 +148,21 @@ all three when it needs to assemble or run a guest program.
 
 The audit found the following uses of `@jhlagado/debug80-runtime`:
 
-| Consumer              | Current use                                                                                                                             | First migration slice                                                             | What stays behind                             |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------- |
-| **Atom**              | Bare host execution and compiler proofs use `createZ80Runtime` and `parseIntelHex`; CP/M tests also import the CP/M filesystem/runtime. | Move the bare Node/Deno harness and generic tests to `@jhlagado/z80-runtime`.     | CP/M image tests and their platform adapter.  |
-| **Nucleus**           | Compiler/execution adapter and compiler/NOBJ tests use the generic root API.                                                            | Replace the generic execution import; keep the replaceable adapter seam.          | Any CP/M-specific proof host.                 |
-| **Edit**              | Editor workload tests use the generic runtime and a CP/M terminal.                                                                      | Move the CPU harness first.                                                       | Terminal and CP/M filesystem helpers.         |
-| **Skate**             | Deno differential proof runs generated programs through the generic runtime.                                                            | Use the runtime or a service-provider harness after the CPU package is published. | Skate effect semantics and Triptych provider. |
-| **Portable CP/M**     | Test support uses CPU state and a Debug80 CP/M harness.                                                                                 | Depend on the new CPU package in test support.                                    | CP/M machine and BDOS/BIOS behaviour.         |
-| **Triptych**          | Rust/WASM are production; JavaScript runtime imports are test/proof helpers only.                                                       | Keep production unchanged; switch only tests after parity vectors pass.           | Rust/WASM machine and BIOS.                   |
-| **z80-services**      | Native byte-gateway tests instantiate the JS CPU.                                                                                       | Update proof dependency after the new package has vectors.                        | Service contract and native provider.         |
-| **z80-tool-services** | Native NOBJ consumer tests instantiate the JS CPU.                                                                                      | Update test-only dependency and record the new runtime pin.                       | Tool-service authority and native modules.    |
-| **Debug80**           | The extension directly consumes generic CPU types and TEC/CP/M platform types.                                                          | No automatic migration; make it a separate product decision.                      | TEC, CP/M and debugger-facing compatibility.  |
+| Consumer              | Current use                                                                                                                              | First migration slice                                        | What stays behind                             |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------- |
+| **Atom**              | Bare host execution and compiler proofs use `createZ80Runtime` and `parseIntelHex`; CP/M tests still import the CP/M filesystem/runtime. | Migrated in `16fb8de`.                                       | CP/M image tests and their platform adapter.  |
+| **Nucleus**           | Compiler/execution adapter and compiler/NOBJ tests use the generic root API.                                                             | Migrated in `6935269`.                                       | Any CP/M-specific proof host.                 |
+| **Edit**              | Editor workload tests use the generic runtime and a CP/M terminal.                                                                       | Migrated in `63762528`.                                      | Terminal and CP/M filesystem helpers.         |
+| **Skate**             | Deno differential proof runs generated programs through the generic runtime.                                                             | Migrated in `3f93298`.                                       | Skate effect semantics and Triptych provider. |
+| **Portable CP/M**     | Test support uses the new CPU snapshot type while its named Debug80 harness remains the compatibility oracle.                            | Migrated in `4fdc62a`.                                       | CP/M machine and BDOS/BIOS behaviour.         |
+| **Triptych**          | Rust/WASM are production; JavaScript runtime imports are test/proof helpers only.                                                        | Generic proofs migrated in `5f804f0`; production unchanged.  | Rust/WASM machine and BIOS.                   |
+| **z80-services**      | Native byte-gateway tests instantiate the JS CPU.                                                                                        | Migrated in `2fb4692`.                                       | Service contract and native provider.         |
+| **z80-tool-services** | Native NOBJ consumer tests instantiate the JS CPU.                                                                                       | Migrated in `247e379`.                                       | Tool-service authority and native modules.    |
+| **Debug80**           | The extension directly consumes generic CPU types and TEC/CP/M platform types.                                                           | No automatic migration; make it a separate product decision. | TEC, CP/M and debugger-facing compatibility.  |
 
-Current pins are not uniform: some consumers use the standalone revision
-`0024be1`, some use the older `b7343aa`, and some use a semver range. The
-extraction must replace these deliberately, one repository at a time; it must
-not silently rewrite lockfiles or platform imports.
+The migrated consumers pin `e4ee190`. The old revision pins remain only in
+deliberate Debug80 compatibility paths, including the CP/M test oracle and
+Triptych's product-specific adapter.
 
 ## Documentation index
 
@@ -214,10 +213,33 @@ The extraction is complete only when the new package has a published contract,
 two independent migrated consumers, passing generic vectors, and no import
 path from the new package into CP/M, TEC or Debug80 UI code.
 
+## Migration evidence at this checkpoint
+
+The CPU-first package is public at
+[`z80-runtime`](https://github.com/jhlagado/z80-runtime), pinned by consumers to
+`e4ee190`. The following repository commits use the new package for their
+generic CPU or proof paths:
+
+| Repository        | Commit     | Evidence                                                                                                                  |
+| ----------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Atom              | `16fb8de`  | 369 Node tests pass; CP/M adapter remains on the compatibility runtime.                                                   |
+| Nucleus           | `6935269`  | 150 tests, Atom-source proofs and compiler-image checks pass.                                                             |
+| Edit              | `63762528` | Editor CPU workload harness and measurements use the new package; CP/M terminal remains separate.                         |
+| Skate             | `3f93298`  | Deno typecheck and scope-budget proof pass through the new import map.                                                    |
+| Portable CP/M     | `4fdc62a`  | CPU snapshot typing uses the new package; the named Debug80 test harness remains as the compatibility oracle.             |
+| z80-services      | `2fb4692`  | Full Deno verification passes, including the native byte-gateway proof.                                                   |
+| z80-tool-services | `247e379`  | 132 tests and native NOBJ consumer proof pass.                                                                            |
+| Triptych          | `5f804f0`  | Typecheck, CPU conformance, sound proof, and CP/M 2.2 compatibility proof pass; Rust/WASM production remains independent. |
+
+The new package itself passes its Node typecheck, lint, formatting, 90 generic
+CPU tests and package smoke test. No production source imports the old runtime
+through these migrated paths. Debug80's product-specific runtime, TEC/CP/M
+platform modules and AZM integration remain unchanged.
+
 ## Current decision and next implementation task
 
-The boundary is now documented. No new remote repository has been created or
-published, and no consumer has been rewritten in this stage. The next bounded
-task is to scaffold `@jhlagado/z80-runtime` from the CPU-first file set, add
-its conformance tests, and run Atom's bare harness against both packages before
-changing any broader dependency graph.
+The boundary is implemented and documented. The remaining work is release
+housekeeping: push the consumer commits, refresh any downstream lockfiles that
+intentionally pin these revisions, and keep a separate compatibility gate for
+any future Debug80 migration. Do not remove or rewrite the legacy runtime until
+that product-specific gate exists.
