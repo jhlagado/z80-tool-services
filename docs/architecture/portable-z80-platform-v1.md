@@ -2,7 +2,7 @@
 
 ## Stage 0: contract and profile baseline
 
-**Status:** accepted working baseline; software qualification in progress
+**Status:** accepted working baseline; macOS-native/WASM software checkpoint passed
 **Date:** 2026-09-24
 **Home:** `z80-tool-services`
 
@@ -316,7 +316,9 @@ reason and migration stage. No dependency remains unexplained.
 
 **Progress:** the ownership map, profile record and migration exceptions have
 been accepted as the working baseline. The software target is WASM plus
-macOS-native Triptych; ESP32 is explicitly deferred.
+macOS-native Triptych; ESP32 is explicitly deferred. The complete software
+qualification checkpoint is recorded in
+[`stage-0-software-qualification-2026-09-24.md`](../reports/stage-0-software-qualification-2026-09-24.md).
 
 ### Stage 1: behaviour inventory
 
